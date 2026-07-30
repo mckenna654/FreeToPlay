@@ -21,11 +21,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, '../../public')));
 
+app.set('trust proxy', 1);
+
 // Sessions
 app.use(session({
     secret: process.env.SESSION_SECRET || 'super-secret',
     resave: false,
     saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production' && process.env.BASE_URL?.startsWith('https'), // true if behind HTTPS proxy
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+    }
 }));
 
 // Passport Config
