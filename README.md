@@ -147,12 +147,16 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.5.1** | Docker build fix + migration recovery guidance (**use this**) |
 | **1.5.0** | Branding, MIT license, docs polish |
 | **1.4.0** | Discord web links, reverse proxy / HTTPS support |
 | **1.3.0** | Host cancel + Discord cancellation sync |
 | **1.2.0** | Calendar UI, RSVP statuses, interactive Discord buttons |
 | **1.1.0** | RAWG game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
+
+> **Note:** Always pull `ghcr.io/mckenna654/freetoplay:latest` or `:v1.5.1`.  
+> Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---
 

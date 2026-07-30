@@ -33,6 +33,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/src/views ./src/views
 COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/docker-entrypoint.sh ./
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Ensure the data directory exists and has correct permissions
 RUN mkdir -p /app/data
@@ -44,5 +46,4 @@ ENV DATABASE_URL="file:/app/data/prod.db"
 
 EXPOSE 3000
 
-# Run migrations and start the app
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

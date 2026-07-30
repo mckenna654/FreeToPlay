@@ -5,6 +5,25 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.5.1] — 2026-07-31
+
+### Fixed
+- Docker images are only built from `main` (historical release tags no longer rebuild old broken images)
+- Clearer container startup errors when a migration fails
+- Recovery guidance if `prod.db` is stuck after a bad update
+
+### Upgrade / recovery
+If the container loops on Prisma migration errors after a Force Update:
+
+```bash
+rm -f /mnt/user/appdata/freetoplay/data/prod.db
+rm -f /mnt/user/appdata/freetoplay/data/prod.db-journal
+```
+
+Then set the image to `ghcr.io/mckenna654/freetoplay:latest` (or `:v1.5.1`) and restart.
+
+---
+
 ## [1.5.0] — 2026-07-31
 
 ### Added
