@@ -212,7 +212,16 @@ export const notifySessionCancelled = async (session: { title: string; gameTitle
                 .setColor(0xE11D48) // Rose 600
                 .setDescription(`The session for **${session.gameTitle}** hosted by **${session.creatorName}** has been cancelled.`);
             
-            await channel.send({ embeds: [embed] });
+            const cancelMsg = await channel.send({ embeds: [embed] });
+
+            // Delete the cancellation message after 2 hours
+            setTimeout(async () => {
+                try {
+                    await cancelMsg.delete();
+                } catch (e) {
+                    console.error('Could not delete cancellation message:', e);
+                }
+            }, 2 * 60 * 60 * 1000);
         }
     } catch (error) {
         console.error('Failed to send cancellation notification:', error);
