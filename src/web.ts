@@ -259,5 +259,31 @@ app.post('/sessions/:id/rsvp', async (req, res) => {
     }
 });
 
+// Delete Session
+app.post('/sessions/:id/delete', async (req, res) => {
+    if (!req.user) return res.redirect('/auth/discord');
+
+    const user = req.user as any;
+    const sessionId = req.params.id;
+
+    try {
+        const session = await prisma.gameSession.findUnique({ where: { id: sessionId } });
+        if (!session) return res.status(404).send('Session not found');
+
+        // Verify the logged-in user is the creator of the event
+        if (session.creatorId !== user.id) {
+            return res.status(403).send('Unauthorized');
+        }
+
+        await prisma.gameSession.delete({
+            where: { id: sessionId }
+        });
+
+        res.redirect('/');
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/sessions/${sessionId}?error=delete_failed`);
+    }
+});
 
 export default app;

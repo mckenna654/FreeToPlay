@@ -88,8 +88,8 @@
         </div>
 
         <!-- Right Column: Action Panel -->
-        <div class="space-y-6">
-            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl sticky top-6">
+        <div class="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Your RSVP</h3>
                 
                 <% if (!user) { %>
@@ -123,6 +123,20 @@
                     </form>
                 <% } %>
             </section>
+
+            <!-- Admin / Creator Controls -->
+            <% if (user && user.id === session.creatorId) { %>
+                <section class="bg-slate-900 border border-rose-900/50 rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-sm font-bold text-rose-500 uppercase tracking-wider mb-2">Host Actions</h3>
+                    <p class="text-xs text-slate-400 mb-4">You are the host of this event. You can cancel and remove it completely.</p>
+                    
+                    <form action="/sessions/<%= session.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to cancel and delete this event? This action cannot be undone.');">
+                        <button type="submit" class="w-full flex justify-center items-center py-3 px-4 rounded-xl font-bold transition-all border bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500">
+                            Cancel Event
+                        </button>
+                    </form>
+                </section>
+            <% } %>
         </div>
     </div>
 </div>
