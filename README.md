@@ -72,6 +72,17 @@ To get automatic game cover art and autocomplete search working when scheduling 
 3. Under **Bot**, generate a token. Ensure it has permissions to send messages and embed links.
 4. Use the OAuth2 URL Generator to invite the bot to your server with the `bot` scope.
 
+## 🌐 Hosting Externally (Reverse Proxy / Nginx Proxy Manager)
+If you want to host FreeToPlay securely on a custom domain (e.g., `https://f2p.yourdomain.com`), the app natively supports reverse proxies and secure cookies. 
+
+1. **Update Environment Variable:** Change your container's `BASE_URL` to your full HTTPS domain (`https://f2p.yourdomain.com`).
+2. **Update Discord Portal:** Go back to your Discord Application, navigate to **OAuth2 -> Redirects**, and add your new HTTPS callback URL (`https://f2p.yourdomain.com/auth/discord/callback`).
+3. **NPM Setup:** In Nginx Proxy Manager, create a new Proxy Host:
+   - **Domain:** `f2p.yourdomain.com`
+   - **Forward Hostname / IP:** Your Unraid/Docker server's local IP (e.g., `192.168.1.50`).
+   - **Forward Port:** `3000` (or your mapped port).
+   - **SSL:** Request a Let's Encrypt cert, and enable **Force SSL**.
+
 ## 🛠️ Development
 
 To run the project locally without Docker:
