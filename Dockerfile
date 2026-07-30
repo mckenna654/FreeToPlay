@@ -29,6 +29,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/src/views ./src/views
+COPY --from=builder /app/prisma.config.ts ./
 
 # Ensure the data directory exists and has correct permissions
 RUN mkdir -p /app/data
