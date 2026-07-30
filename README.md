@@ -1,83 +1,85 @@
-# FreeToPlay 🎮
-
 <p align="center">
   <img src="public/full-size.png" alt="FreeToPlay Logo" width="400">
 </p>
 
-FreeToPlay is a simple Discord Bot and web application designed to help you and your friends easily schedule gaming sessions. With our busy lives, it's difficult to align schedules. FreeToPlay allows users to authenticate via Discord, create gaming sessions (e.g., "Halo Combat Evolved - Co-Op Campaign"), and allow others to join. The bot posts a message to a designated Discord channel whenever a session is created or someone joins!
+<p align="center">
+  <strong>The Ultimate Gaming Session Scheduler for Discord Communities.</strong>
+</p>
 
-## Features
+<p align="center">
+  <img src="https://img.shields.io/github/v/release/mckenna654/FreeToPlay?style=flat-square&color=10b981" alt="Release">
+  <img src="https://img.shields.io/github/license/mckenna654/FreeToPlay?style=flat-square&color=6366f1" alt="License">
+</p>
 
-- **Discord Authentication:** Log in seamlessly with your Discord account.
-- **Session Scheduling:** Create upcoming gaming sessions with a specified game, details, date, and time.
-- **RSVP System:** Users can easily join or leave existing sessions.
-- **Discord Bot Notifications:** Automatically sends notifications to your server when a session is scheduled or when someone joins.
-- **Modern UI:** Designed with Tailwind CSS.
+---
 
-## Screenshots
+## 📖 About FreeToPlay
 
-*(Add screenshots here once the web design is finalized)*
+**FreeToPlay** is a modern, self-hosted web application and Discord Bot designed to solve the hardest part of being an adult gamer: *scheduling time to play with your friends.*
 
-## Prerequisites
+Built with a slick, dark-mode dashboard inspired by modern SaaS apps, FreeToPlay allows users to log in via Discord, schedule upcoming game sessions, and instantly RSVP. 
 
-- Node.js (v18 or higher)
-- A Discord Developer Application (to get Client ID, Secret, and Bot Token)
+Whenever a session is created, the built-in Discord bot automatically posts a rich embed into your server with **Interactive Buttons**, allowing your squad to RSVP (`Join`, `Tentative`, `Decline`) directly from the Discord chat!
 
-## Setup
+## ✨ Features
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/FreeToPlay.git
-   cd FreeToPlay
-   ```
+- 🎨 **Modern SaaS UI:** Ultra-dark dashboard with a full monthly calendar grid and dedicated event pages.
+- 🔐 **Discord Authentication:** Zero friction. Log in securely using your existing Discord account.
+- 🎮 **RAWG Game Database API:** Autocomplete search for games, automatically pulling in stunning high-res cover art for your dashboard.
+- 🤖 **Interactive Discord Bot:** Posts beautiful game announcements with actionable RSVP buttons that sync live with the web database.
+- 🐳 **Fully Containerized:** Easy to deploy on Unraid, Portainer, or any standard Docker-capable server.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+## 🚀 Getting Started (Docker / Unraid)
 
-3. **Database Setup:**
-   The project uses SQLite via Prisma. Initialize the database:
-   ```bash
-   npx prisma migrate dev
-   ```
+FreeToPlay is published as a Docker image to the GitHub Container Registry. 
 
-4. **Environment Variables:**
-   Create a `.env` file in the root directory based on `.env.example` (or configure the following values):
-   ```env
-   DATABASE_URL="file:./dev.db"
-   DISCORD_CLIENT_ID="your_discord_client_id"
-   DISCORD_CLIENT_SECRET="your_discord_client_secret"
-   DISCORD_BOT_TOKEN="your_discord_bot_token"
-   DISCORD_CHANNEL_ID="your_discord_channel_id"
-   SESSION_SECRET="your_random_secret_string"
-   PORT=3000
-   BASE_URL="http://localhost:3000"
-   ```
+### Unraid Setup
+1. In Unraid, go to the **Docker** tab and click **Add Container**.
+2. **Repository:** `ghcr.io/mckenna654/freetoplay:latest`
+3. **Network:** `Bridge`
+4. Add a **Port**: Container Port `3000` -> Host Port `3000` (or your preferred port).
+5. Add a **Path** (Crucial for database persistence):
+   - Container Path: `/app/data`
+   - Host Path: `/mnt/user/appdata/freetoplay/data/`
+6. Add the following **Environment Variables** (see below).
 
-5. **Discord Application Configuration:**
-   - In your Discord Developer Portal, add an **OAuth2 Redirect URI**: `http://localhost:3000/auth/discord/callback` (or your production URL).
-   - Give the Bot the following intents: **Message Content Intent** (if needed for reading, though currently it just posts embeds).
-   - Ensure the Bot is invited to your server and has permissions to send messages and embeds in the target channel.
+### Environment Variables
 
-## Running the Application
+| Variable | Description |
+|----------|-------------|
+| `DISCORD_CLIENT_ID` | Your Discord App Client ID |
+| `DISCORD_CLIENT_SECRET` | Your Discord App Client Secret |
+| `DISCORD_BOT_TOKEN` | Your Discord Bot Token |
+| `DISCORD_CHANNEL_ID` | The ID of the Discord text channel where the bot should post |
+| `BASE_URL` | Your public URL or local IP (e.g., `http://192.168.1.50:3000`) |
+| `SESSION_SECRET` | A random string used to secure login sessions |
+| `DATABASE_URL` | **MUST BE:** `file:/app/data/prod.db` |
+| `RAWG_API_KEY` | *(Optional)* Free API key from rawg.io for game cover art |
 
-**Development Mode:**
+---
+
+## 🎮 How to enable the Game Database (RAWG API)
+To get automatic game cover art and autocomplete search working when scheduling a session:
+1. Create a free account at [RAWG.io](https://rawg.io/apidocs).
+2. Generate an API Key in your developer dashboard.
+3. Add the `RAWG_API_KEY` environment variable to your Docker container with your key.
+4. Restart the container. Start typing a game name, and the magic happens!
+
+## 🤖 Discord Bot Setup
+1. Create an application in the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Under **OAuth2 -> Redirects**, add your callback URL: `http://<YOUR_BASE_URL>/auth/discord/callback`.
+3. Under **Bot**, generate a token. Ensure it has permissions to send messages and embed links.
+4. Use the OAuth2 URL Generator to invite the bot to your server with the `bot` scope.
+
+## 🛠️ Development
+
+To run the project locally without Docker:
 ```bash
+npm install
+npx prisma migrate dev
 npm run dev
 ```
 
-**Production Mode:**
-```bash
-npm run build
-npm start
-```
-
-## Future Ideas
-
-- **Gaming API Integration:** Integrate IGDB or RAWG APIs to fetch game cover art and search for game titles.
-- **Calendar View:** A full monthly calendar view for upcoming sessions.
-
-## License
+## 📝 License
 
 ISC License
