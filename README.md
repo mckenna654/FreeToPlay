@@ -141,6 +141,21 @@ Open `http://localhost:3000`.
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
+
+| Version | Highlights |
+|---------|------------|
+| **1.5.0** | Branding, MIT license, docs polish |
+| **1.4.0** | Discord web links, reverse proxy / HTTPS support |
+| **1.3.0** | Host cancel + Discord cancellation sync |
+| **1.2.0** | Calendar UI, RSVP statuses, interactive Discord buttons |
+| **1.1.0** | RAWG game search + cover art |
+| **1.0.0** | Initial web app, Discord bot, Docker |
+
+---
+
 ## License
 
 [MIT](LICENSE) © mckenna654
