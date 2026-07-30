@@ -10,6 +10,9 @@ RUN npm ci
 
 COPY . .
 
+# ADD THIS: Dummy URL so Prisma Generate doesn't crash during build
+ENV DATABASE_URL="file:./dev.db"
+
 # Generate Prisma Client and build TypeScript
 RUN npx prisma generate
 RUN npm run build
