@@ -25,6 +25,7 @@ model GameSession {
   startTime        DateTime
   maxPlayers       Int      @default(4)
   discordChannelId String?
+  discordMessageId String?
   createdAt        DateTime @default(now())
   creatorId        String
   creator          User     @relation("CreatedSessions", fields: [creatorId], references: [id])

@@ -5,7 +5,7 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
 import prisma from './prisma';
-import { notifyNewSession } from './bot';
+import { notifyNewSession, notifySessionCancelled } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday } from 'date-fns';
 
 const app = express();
@@ -196,7 +196,7 @@ app.post('/sessions', async (req, res) => {
         });
 
         if (process.env.DISCORD_CHANNEL_ID) {
-            await notifyNewSession({
+            const messageId = await notifyNewSession({
                 id: session.id,
                 gameTitle,
                 gameCoverUrl: imageUrl || null,
@@ -206,6 +206,13 @@ app.post('/sessions', async (req, res) => {
                 maxPlayers: session.maxPlayers,
                 creatorName: user.username
             }, process.env.DISCORD_CHANNEL_ID);
+
+            if (messageId) {
+                await prisma.gameSession.update({
+                    where: { id: session.id },
+                    data: { discordMessageId: messageId }
+                });
+            }
         }
 
         res.redirect(`/sessions/${session.id}`);
@@ -267,12 +274,23 @@ app.post('/sessions/:id/delete', async (req, res) => {
     const sessionId = req.params.id;
 
     try {
-        const session = await prisma.gameSession.findUnique({ where: { id: sessionId } });
+        const session = await prisma.gameSession.findUnique({ 
+            where: { id: sessionId },
+            include: { creator: true }
+        });
         if (!session) return res.status(404).send('Session not found');
 
         // Verify the logged-in user is the creator of the event
         if (session.creatorId !== user.id) {
             return res.status(403).send('Unauthorized');
+        }
+
+        if (process.env.DISCORD_CHANNEL_ID) {
+            await notifySessionCancelled({
+                title: session.title,
+                gameTitle: session.gameTitle,
+                creatorName: session.creator.username
+            }, process.env.DISCORD_CHANNEL_ID, session.discordMessageId);
         }
 
         await prisma.gameSession.delete({

@@ -107,9 +107,38 @@ export const notifyNewSession = async (session: { id: string, gameTitle: string;
                         .setStyle(ButtonStyle.Danger)
                 );
             
-            await channel.send({ embeds: [embed], components: [row] });
+            const message = await channel.send({ embeds: [embed], components: [row] });
+            return message.id;
         }
     } catch (error) {
         console.error('Failed to send Discord notification:', error);
+        return null;
+    }
+};
+
+export const notifySessionCancelled = async (session: { title: string; gameTitle: string; creatorName: string }, channelId: string, messageId: string | null) => {
+    try {
+        const channel = await client.channels.fetch(channelId) as TextChannel;
+        if (channel) {
+            if (messageId) {
+                try {
+                    const oldMessage = await channel.messages.fetch(messageId);
+                    if (oldMessage) {
+                        await oldMessage.delete();
+                    }
+                } catch (e) {
+                    console.error('Could not delete original session message:', e);
+                }
+            }
+            
+            const embed = new EmbedBuilder()
+                .setTitle(`❌ Event Cancelled: ${session.title}`)
+                .setColor(0xE11D48) // Rose 600
+                .setDescription(`The session for **${session.gameTitle}** hosted by **${session.creatorName}** has been cancelled.`);
+            
+            await channel.send({ embeds: [embed] });
+        }
+    } catch (error) {
+        console.error('Failed to send cancellation notification:', error);
     }
 };
