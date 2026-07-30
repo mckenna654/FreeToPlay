@@ -14,7 +14,7 @@ export const notifyNewSession = async (session: { game: string; content: string;
         if (channel) {
             const embed = new EmbedBuilder()
                 .setTitle('🎮 New Gaming Session Suggested!')
-                .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/small-size.png')
+                .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/discord-size.png')
                 .setColor(0x00FF00)
                 .addFields(
                     { name: 'Game', value: session.game, inline: true },
