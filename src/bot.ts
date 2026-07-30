@@ -75,9 +75,13 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 export const notifyNewSession = async (session: { id: string, gameTitle: string; gameCoverUrl?: string | null; title: string; description: string; startTime: Date; creatorName: string; maxPlayers: number }, channelId: string) => {
     try {
         const channel = await client.channels.fetch(channelId) as TextChannel;
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+        const eventUrl = `${baseUrl}/sessions/${session.id}`;
+
         if (channel) {
             const embed = new EmbedBuilder()
                 .setTitle(`🎮 ${session.title}`)
+                .setURL(eventUrl)
                 .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/discord-size.png')
                 .setColor(0x0F172A) // Slate 900
                 .setDescription(`**${session.gameTitle}**\n\n${session.description}`)
@@ -86,7 +90,7 @@ export const notifyNewSession = async (session: { id: string, gameTitle: string;
                     { name: 'Slots', value: `1 / ${session.maxPlayers} Filled`, inline: true },
                     { name: 'Host', value: session.creatorName, inline: true }
                 );
-            
+
             if (session.gameCoverUrl) {
                 embed.setImage(session.gameCoverUrl);
             }
@@ -104,9 +108,13 @@ export const notifyNewSession = async (session: { id: string, gameTitle: string;
                     new ButtonBuilder()
                         .setCustomId(`decline_${session.id}`)
                         .setLabel('Decline')
-                        .setStyle(ButtonStyle.Danger)
+                        .setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder()
+                        .setLabel('Web Dashboard')
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(baseUrl)
                 );
-            
+
             const message = await channel.send({ embeds: [embed], components: [row] });
             return message.id;
         }
