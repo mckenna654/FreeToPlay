@@ -78,6 +78,24 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.get('/api/games/search', async (req, res) => {
+    if (!process.env.RAWG_API_KEY) {
+        return res.json([]);
+    }
+    
+    const query = req.query.q as string;
+    if (!query) return res.json([]);
+
+    try {
+        const response = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(query)}&key=${process.env.RAWG_API_KEY}&page_size=5`);
+        const data = await response.json();
+        res.json(data.results || []);
+    } catch (error) {
+        console.error('Error fetching games from RAWG:', error);
+        res.json([]);
+    }
+});
+
 app.get('/', async (req, res) => {
     const sessions = await prisma.session.findMany({
         where: {
@@ -114,8 +132,8 @@ app.get('/sessions/new', (req, res) => {
 
 app.post('/sessions', async (req, res) => {
     if (!req.user) return res.redirect('/auth/discord');
-    
-    const { game, content, date, time } = req.body;
+
+    const { game, imageUrl, content, date, time } = req.body;
     const startTime = new Date(`${date}T${time}`);
     const user = req.user as any;
 
@@ -123,6 +141,7 @@ app.post('/sessions', async (req, res) => {
         const session = await prisma.session.create({
             data: {
                 game,
+                imageUrl: imageUrl || null,
                 content,
                 startTime,
                 creatorId: user.id
@@ -140,6 +159,7 @@ app.post('/sessions', async (req, res) => {
         if (process.env.DISCORD_CHANNEL_ID) {
             await notifyNewSession({
                 game,
+                imageUrl: imageUrl || undefined,
                 content,
                 startTime,
                 creatorName: user.username

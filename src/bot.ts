@@ -8,7 +8,7 @@ client.once('clientReady', () => {
     console.log(`Bot logged in as ${client.user?.tag}`);
 });
 
-export const notifyNewSession = async (session: { game: string; content: string; startTime: Date; creatorName: string }, channelId: string) => {
+export const notifyNewSession = async (session: { game: string; imageUrl?: string; content: string; startTime: Date; creatorName: string }, channelId: string) => {
     try {
         const channel = await client.channels.fetch(channelId) as TextChannel;
         if (channel) {
@@ -23,6 +23,10 @@ export const notifyNewSession = async (session: { game: string; content: string;
                     { name: 'Suggested By', value: session.creatorName }
                 )
                 .setTimestamp();
+            
+            if (session.imageUrl) {
+                embed.setImage(session.imageUrl);
+            }
             
             await channel.send({ embeds: [embed] });
         }

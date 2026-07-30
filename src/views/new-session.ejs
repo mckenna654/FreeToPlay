@@ -3,9 +3,15 @@
         <h1 class="text-3xl font-bold mb-6 text-indigo-400">Schedule a Gaming Session</h1>
         
         <form action="/sessions" method="POST" class="space-y-6">
-            <div>
+            <div class="relative">
                 <label for="game" class="block text-sm font-medium text-gray-300 mb-1">Game Name</label>
-                <input type="text" id="game" name="game" required placeholder="e.g. Halo Combat Evolved" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="game" name="game" required autocomplete="off" placeholder="e.g. Halo Combat Evolved" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="hidden" id="imageUrl" name="imageUrl">
+                
+                <!-- Autocomplete Dropdown -->
+                <div id="autocomplete-results" class="absolute z-10 w-full bg-gray-800 border border-gray-600 rounded-md mt-1 hidden max-h-60 overflow-y-auto shadow-xl">
+                    <!-- Results will be injected here via JavaScript -->
+                </div>
             </div>
 
             <div>
@@ -33,3 +39,60 @@
         </form>
     </div>
 </div>
+
+<script>
+    const gameInput = document.getElementById('game');
+    const imageUrlInput = document.getElementById('imageUrl');
+    const resultsContainer = document.getElementById('autocomplete-results');
+    let debounceTimer;
+
+    gameInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        
+        // Reset image if user types something new
+        imageUrlInput.value = '';
+
+        if (query.length < 3) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`/api/games/search?q=${encodeURIComponent(query)}`);
+                const games = await response.json();
+                
+                if (games.length > 0) {
+                    resultsContainer.innerHTML = games.map(game => `
+                        <div class="flex items-center gap-3 p-3 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0" 
+                             onclick="selectGame('${game.name.replace(/'/g, "\\'")}', '${game.background_image || ''}')">
+                            ${game.background_image ? `<img src="${game.background_image}" class="w-12 h-12 object-cover rounded">` : `<div class="w-12 h-12 bg-gray-600 rounded flex items-center justify-center text-xs">No img</div>`}
+                            <span class="text-white font-medium">${game.name}</span>
+                        </div>
+                    `).join('');
+                    resultsContainer.classList.remove('hidden');
+                } else {
+                    resultsContainer.classList.add('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                resultsContainer.classList.add('hidden');
+            }
+        }, 500);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!gameInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.classList.add('hidden');
+        }
+    });
+
+    // Select game function
+    window.selectGame = (name, imageUrl) => {
+        gameInput.value = name;
+        imageUrlInput.value = imageUrl;
+        resultsContainer.classList.add('hidden');
+    };
+</script>

@@ -19,6 +19,7 @@ model User {
 model Session {
   id           String               @id @default(uuid())
   game         String
+  imageUrl     String?              // Added for Game API Cover Art
   content      String
   startTime    DateTime
   createdAt    DateTime             @default(now())
