@@ -1,39 +1,48 @@
-<div class="max-w-2xl mx-auto">
-    <div class="bg-gray-800 rounded-lg p-8 shadow-lg border border-gray-700">
-        <h1 class="text-3xl font-bold mb-6 text-indigo-400">Schedule a Gaming Session</h1>
+<div class="max-w-2xl mx-auto p-6 md:p-10">
+    <div class="bg-slate-900 rounded-2xl p-8 shadow-2xl border border-slate-800">
+        <h1 class="text-3xl font-black mb-8 text-emerald-400 tracking-tight">Schedule Session</h1>
         
         <form action="/sessions" method="POST" class="space-y-6">
+            <div>
+                <label for="title" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Event Title</label>
+                <input type="text" id="title" name="title" required placeholder="e.g. Friday Bug Hunt!" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
+            </div>
+
             <div class="relative">
-                <label for="game" class="block text-sm font-medium text-gray-300 mb-1">Game Name</label>
-                <input type="text" id="game" name="game" required autocomplete="off" placeholder="e.g. Halo Combat Evolved" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="gameTitle" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Game Name</label>
+                <input type="text" id="gameTitle" name="gameTitle" required autocomplete="off" placeholder="e.g. Helldivers 2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
                 <input type="hidden" id="imageUrl" name="imageUrl">
                 
                 <!-- Autocomplete Dropdown -->
-                <div id="autocomplete-results" class="absolute z-10 w-full bg-gray-800 border border-gray-600 rounded-md mt-1 hidden max-h-60 overflow-y-auto shadow-xl">
+                <div id="autocomplete-results" class="absolute z-10 w-full bg-slate-800 border border-slate-700 rounded-xl mt-2 hidden max-h-60 overflow-y-auto shadow-2xl overflow-hidden">
                     <!-- Results will be injected here via JavaScript -->
                 </div>
             </div>
 
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-1">
+                    <label for="maxPlayers" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Max Players</label>
+                    <input type="number" id="maxPlayers" name="maxPlayers" required min="1" max="100" value="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
+                </div>
+                <div class="col-span-1">
+                    <label for="date" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
+                    <input type="date" id="date" name="date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors [&::-webkit-calendar-picker-indicator]:invert">
+                </div>
+                <div class="col-span-1">
+                    <label for="time" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Time (Local)</label>
+                    <input type="time" id="time" name="time" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors [&::-webkit-calendar-picker-indicator]:invert">
+                </div>
+            </div>
+
             <div>
-                <label for="content" class="block text-sm font-medium text-gray-300 mb-1">Details (Content, Rules, etc.)</label>
-                <textarea id="content" name="content" rows="3" required placeholder="e.g. Co-Op Campaign on Legendary" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                <label for="description" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Details & Notes</label>
+                <textarea id="description" name="description" rows="4" required placeholder="Let the squad know the plan..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="date" class="block text-sm font-medium text-gray-300 mb-1">Date</label>
-                    <input type="date" id="date" name="date" required class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label for="time" class="block text-sm font-medium text-gray-300 mb-1">Time (Local)</label>
-                    <input type="time" id="time" name="time" required class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-            </div>
-
-            <div class="pt-4 flex justify-end gap-4">
-                <a href="/" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors">Cancel</a>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded transition-colors">
-                    Create Session
+            <div class="pt-6 flex justify-end gap-3 border-t border-slate-800">
+                <a href="/" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-xl transition-colors">Cancel</a>
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] font-bold py-3 px-8 rounded-xl transition-all">
+                    Create Event
                 </button>
             </div>
         </form>
@@ -41,7 +50,7 @@
 </div>
 
 <script>
-    const gameInput = document.getElementById('game');
+    const gameInput = document.getElementById('gameTitle');
     const imageUrlInput = document.getElementById('imageUrl');
     const resultsContainer = document.getElementById('autocomplete-results');
     let debounceTimer;
@@ -65,10 +74,10 @@
                 
                 if (games.length > 0) {
                     resultsContainer.innerHTML = games.map(game => `
-                        <div class="flex items-center gap-3 p-3 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0" 
+                        <div class="flex items-center gap-4 p-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0 transition-colors" 
                              onclick="selectGame('${game.name.replace(/'/g, "\\'")}', '${game.background_image || ''}')">
-                            ${game.background_image ? `<img src="${game.background_image}" class="w-12 h-12 object-cover rounded">` : `<div class="w-12 h-12 bg-gray-600 rounded flex items-center justify-center text-xs">No img</div>`}
-                            <span class="text-white font-medium">${game.name}</span>
+                            ${game.background_image ? `<img src="${game.background_image}" class="w-10 h-10 object-cover rounded-md shadow">` : `<div class="w-10 h-10 bg-slate-900 rounded-md border border-slate-700 flex items-center justify-center text-xs text-slate-500">No img</div>`}
+                            <span class="text-slate-200 font-bold text-sm">${game.name}</span>
                         </div>
                     `).join('');
                     resultsContainer.classList.remove('hidden');

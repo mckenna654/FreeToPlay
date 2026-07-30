@@ -1,4 +1,5 @@
-import { Client, GatewayIntentBits, TextChannel, EmbedBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Interaction } from 'discord.js';
+import prisma from './prisma';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -8,42 +9,107 @@ client.once('clientReady', () => {
     console.log(`Bot logged in as ${client.user?.tag}`);
 });
 
-export const notifyNewSession = async (session: { game: string; imageUrl?: string; content: string; startTime: Date; creatorName: string }, channelId: string) => {
+// Handle Button Interactions
+client.on('interactionCreate', async (interaction: Interaction) => {
+    if (!interaction.isButton()) return;
+
+    const [action, sessionId] = interaction.customId.split('_');
+    
+    if (['confirm', 'tentative', 'decline'].includes(action)) {
+        await interaction.deferReply({ ephemeral: true });
+        
+        try {
+            const user = await prisma.user.upsert({
+                where: { id: interaction.user.id },
+                update: {
+                    username: interaction.user.username,
+                    avatar: interaction.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png` : null,
+                },
+                create: {
+                    id: interaction.user.id,
+                    username: interaction.user.username,
+                    avatar: interaction.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png` : null,
+                }
+            });
+
+            const statusMap: Record<string, string> = {
+                'confirm': 'CONFIRMED',
+                'tentative': 'TENTATIVE',
+                'decline': 'DECLINED'
+            };
+
+            await prisma.rSVP.upsert({
+                where: {
+                    sessionId_userId: {
+                        sessionId,
+                        userId: user.id
+                    }
+                },
+                update: { status: statusMap[action] },
+                create: {
+                    sessionId,
+                    userId: user.id,
+                    status: statusMap[action]
+                }
+            });
+
+            const session = await prisma.gameSession.findUnique({
+                where: { id: sessionId },
+                include: { rsvps: true }
+            });
+
+            if (session) {
+                const confirmedCount = session.rsvps.filter(r => r.status === 'CONFIRMED').length;
+                await interaction.editReply(`✅ You have marked yourself as **${statusMap[action]}** for **${session.gameTitle}**. (${confirmedCount}/${session.maxPlayers} slots filled)`);
+            } else {
+                await interaction.editReply(`✅ Your RSVP status has been updated.`);
+            }
+
+        } catch (error) {
+            console.error('RSVP Error:', error);
+            await interaction.editReply('❌ Failed to update your RSVP status.');
+        }
+    }
+});
+
+export const notifyNewSession = async (session: { id: string, gameTitle: string; gameCoverUrl?: string | null; title: string; description: string; startTime: Date; creatorName: string; maxPlayers: number }, channelId: string) => {
     try {
         const channel = await client.channels.fetch(channelId) as TextChannel;
         if (channel) {
             const embed = new EmbedBuilder()
-                .setTitle('🎮 New Gaming Session Suggested!')
+                .setTitle(`🎮 ${session.title}`)
                 .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/discord-size.png')
-                .setColor(0x00FF00)
+                .setColor(0x0F172A) // Slate 900
+                .setDescription(`**${session.gameTitle}**\n\n${session.description}`)
                 .addFields(
-                    { name: 'Game', value: session.game, inline: true },
-                    { name: 'Content', value: session.content, inline: true },
-                    { name: 'Time', value: session.startTime.toLocaleString() },
-                    { name: 'Suggested By', value: session.creatorName }
-                )
-                .setTimestamp();
+                    { name: 'Time', value: `<t:${Math.floor(session.startTime.getTime() / 1000)}:F>`, inline: true },
+                    { name: 'Slots', value: `1 / ${session.maxPlayers} Filled`, inline: true },
+                    { name: 'Host', value: session.creatorName, inline: true }
+                );
             
-            if (session.imageUrl) {
-                embed.setImage(session.imageUrl);
+            if (session.gameCoverUrl) {
+                embed.setImage(session.gameCoverUrl);
             }
+
+            const row = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`confirm_${session.id}`)
+                        .setLabel('Join (Confirmed)')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId(`tentative_${session.id}`)
+                        .setLabel('Tentative')
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId(`decline_${session.id}`)
+                        .setLabel('Decline')
+                        .setStyle(ButtonStyle.Danger)
+                );
             
-            await channel.send({ embeds: [embed] });
+            await channel.send({ embeds: [embed], components: [row] });
         }
     } catch (error) {
         console.error('Failed to send Discord notification:', error);
     }
 };
-
-export const notifySessionJoin = async (session: { game: string; startTime: Date }, joinerName: string, channelId: string) => {
-    try {
-        const channel = await client.channels.fetch(channelId) as TextChannel;
-        if (channel) {
-            await channel.send(`👋 **${joinerName}** joined the session for **${session.game}** scheduled at ${session.startTime.toLocaleString()}!`);
-        }
-    } catch (error) {
-        console.error('Failed to send Discord join notification:', error);
-    }
-};
-
-export default client;

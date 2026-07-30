@@ -5,7 +5,8 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
 import prisma from './prisma';
-import { notifyNewSession, notifySessionJoin } from './bot';
+import { notifyNewSession } from './bot';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday } from 'date-fns';
 
 const app = express();
 
@@ -97,17 +98,52 @@ app.get('/api/games/search', async (req, res) => {
 });
 
 app.get('/', async (req, res) => {
-    const sessions = await prisma.session.findMany({
+    // Generate Calendar Days
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    // Fetch all sessions in the interval
+    const sessions = await prisma.gameSession.findMany({
         where: {
-            startTime: { gte: new Date() } // Future sessions only
+            startTime: {
+                gte: startDate,
+                lte: endDate
+            }
         },
         orderBy: { startTime: 'asc' },
         include: {
             creator: true,
-            participants: { include: { user: true } }
+            rsvps: { include: { user: true } }
         }
     });
-    res.render('index', { sessions });
+
+    // Upcoming widget data (Future sessions)
+    const upcomingSessions = await prisma.gameSession.findMany({
+        where: { startTime: { gte: today } },
+        orderBy: { startTime: 'asc' },
+        take: 5
+    });
+
+    // Recent Members widget data
+    const activeMembers = await prisma.user.findMany({
+        take: 8,
+        orderBy: { id: 'desc' }
+    });
+
+    res.render('index', { 
+        sessions, 
+        upcomingSessions, 
+        activeMembers, 
+        calendarDays, 
+        monthStart, 
+        isSameMonth, 
+        isToday, 
+        format 
+    });
 });
 
 app.get('/auth/discord', passport.authenticate('discord'));
@@ -133,110 +169,93 @@ app.get('/sessions/new', (req, res) => {
 app.post('/sessions', async (req, res) => {
     if (!req.user) return res.redirect('/auth/discord');
 
-    const { game, imageUrl, content, date, time } = req.body;
+    const { gameTitle, imageUrl, title, description, maxPlayers, date, time } = req.body;
     const startTime = new Date(`${date}T${time}`);
     const user = req.user as any;
 
     try {
-        const session = await prisma.session.create({
+        const session = await prisma.gameSession.create({
             data: {
-                game,
-                imageUrl: imageUrl || null,
-                content,
+                gameTitle,
+                gameCoverUrl: imageUrl || null,
+                title,
+                description,
+                maxPlayers: parseInt(maxPlayers) || 4,
                 startTime,
                 creatorId: user.id
             }
         });
 
-        // Add creator as first participant
-        await prisma.sessionParticipant.create({
+        // Add creator as CONFIRMED
+        await prisma.rSVP.create({
             data: {
                 sessionId: session.id,
-                userId: user.id
+                userId: user.id,
+                status: 'CONFIRMED'
             }
         });
 
         if (process.env.DISCORD_CHANNEL_ID) {
             await notifyNewSession({
-                game,
-                imageUrl: imageUrl || undefined,
-                content,
+                id: session.id,
+                gameTitle,
+                gameCoverUrl: imageUrl || null,
+                title,
+                description,
                 startTime,
+                maxPlayers: session.maxPlayers,
                 creatorName: user.username
             }, process.env.DISCORD_CHANNEL_ID);
         }
 
-        res.redirect('/');
+        res.redirect(`/sessions/${session.id}`);
     } catch (error) {
         console.error(error);
         res.redirect('/sessions/new?error=failed');
     }
 });
 
-// Join Session
-app.post('/sessions/:id/join', async (req, res) => {
-    if (!req.user) return res.redirect('/auth/discord');
-    
-    const user = req.user as any;
-    const sessionId = req.params.id;
-
-    try {
-        const session = await prisma.session.findUnique({ where: { id: sessionId } });
-        if (!session) return res.status(404).send('Session not found');
-
-        // Check if already participating
-        const existing = await prisma.sessionParticipant.findUnique({
-            where: {
-                sessionId_userId: {
-                    sessionId,
-                    userId: user.id
-                }
-            }
-        });
-
-        if (!existing) {
-            await prisma.sessionParticipant.create({
-                data: {
-                    sessionId,
-                    userId: user.id
-                }
-            });
-
-            if (process.env.DISCORD_CHANNEL_ID) {
-                await notifySessionJoin({
-                    game: session.game,
-                    startTime: session.startTime
-                }, user.username, process.env.DISCORD_CHANNEL_ID);
-            }
+// View Session Details
+app.get('/sessions/:id', async (req, res) => {
+    const session = await prisma.gameSession.findUnique({
+        where: { id: req.params.id },
+        include: {
+            creator: true,
+            rsvps: { include: { user: true } }
         }
-        
-        res.redirect('/');
-    } catch (error) {
-        console.error(error);
-        res.redirect('/?error=failed_to_join');
-    }
+    });
+
+    if (!session) return res.status(404).send('Session not found');
+
+    res.render('event', { session, format });
 });
 
-// Leave Session
-app.post('/sessions/:id/leave', async (req, res) => {
+// RSVP Update
+app.post('/sessions/:id/rsvp', async (req, res) => {
     if (!req.user) return res.redirect('/auth/discord');
-    
+
     const user = req.user as any;
     const sessionId = req.params.id;
+    const { status } = req.body;
 
     try {
-        await prisma.sessionParticipant.delete({
-            where: {
-                sessionId_userId: {
+        if (['CONFIRMED', 'TENTATIVE', 'DECLINED'].includes(status)) {
+            await prisma.rSVP.upsert({
+                where: {
+                    sessionId_userId: { sessionId, userId: user.id }
+                },
+                update: { status },
+                create: {
                     sessionId,
-                    userId: user.id
+                    userId: user.id,
+                    status
                 }
-            }
-        });
-        res.redirect('/');
+            });
+        }
+        res.redirect(`/sessions/${sessionId}`);
     } catch (error) {
         console.error(error);
-        res.redirect('/');
+        res.redirect(`/sessions/${sessionId}?error=failed`);
     }
 });
 

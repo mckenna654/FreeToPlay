@@ -1,0 +1,128 @@
+<div class="max-w-4xl mx-auto p-6 md:p-10">
+    <!-- Header/Cover Art -->
+    <div class="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-8 border border-slate-800 shadow-2xl">
+        <% if(session.gameCoverUrl) { %>
+            <img src="<%= session.gameCoverUrl %>" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
+        <% } else { %>
+            <div class="absolute inset-0 bg-slate-800"></div>
+        <% } %>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-8">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 bg-slate-800/80 backdrop-blur border border-slate-700 rounded-full text-xs font-bold text-slate-300">
+                    <%= session.gameTitle %>
+                </span>
+                <span class="px-3 py-1 bg-slate-800/80 backdrop-blur border border-slate-700 rounded-full text-xs font-bold text-emerald-400">
+                    <%= format(new Date(session.startTime), 'EEEE, MMM do @ h:mm a') %>
+                </span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight"><%= session.title %></h1>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Details & RSVPs -->
+        <div class="lg:col-span-2 space-y-8">
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Session Details</h3>
+                <p class="text-slate-300 whitespace-pre-wrap leading-relaxed"><%= session.description %></p>
+                
+                <div class="mt-6 flex items-center gap-4 pt-6 border-t border-slate-800">
+                    <img src="<%= session.creator.avatar || '/default-avatar.png' %>" class="w-10 h-10 rounded-full border border-slate-700">
+                    <div>
+                        <p class="text-xs text-slate-500">Hosted by</p>
+                        <p class="text-sm font-bold text-slate-200"><%= session.creator.username %></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <% 
+                    const confirmed = session.rsvps.filter(r => r.status === 'CONFIRMED');
+                    const tentative = session.rsvps.filter(r => r.status === 'TENTATIVE');
+                    const declined = session.rsvps.filter(r => r.status === 'DECLINED');
+                    const isFull = confirmed.length >= session.maxPlayers;
+                %>
+                
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Roster</h3>
+                    <span class="text-xs font-bold <%= isFull ? 'text-amber-500' : 'text-emerald-500' %>">
+                        <%= confirmed.length %> / <%= session.maxPlayers %> Filled
+                    </span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-800 rounded-full h-2.5 mb-6 overflow-hidden flex">
+                    <% const percentage = Math.min(100, (confirmed.length / session.maxPlayers) * 100); %>
+                    <div class="<%= isFull ? 'bg-amber-500' : 'bg-emerald-500' %> h-2.5 rounded-full" style="width: <%= percentage %>%"></div>
+                </div>
+
+                <!-- Members List -->
+                <div class="space-y-3">
+                    <% session.rsvps.forEach(rsvp => { %>
+                        <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                            <div class="flex items-center gap-3">
+                                <% if(rsvp.user.avatar) { %>
+                                    <img src="<%= rsvp.user.avatar %>" class="w-8 h-8 rounded-full border border-slate-700">
+                                <% } %>
+                                <span class="font-medium text-slate-200"><%= rsvp.user.username %></span>
+                            </div>
+                            
+                            <% if (rsvp.status === 'CONFIRMED') { %>
+                                <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] font-bold tracking-wider">CONFIRMED</span>
+                            <% } else if (rsvp.status === 'TENTATIVE') { %>
+                                <span class="px-2 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] font-bold tracking-wider">TENTATIVE</span>
+                            <% } else { %>
+                                <span class="px-2 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded text-[10px] font-bold tracking-wider">DECLINED</span>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                    
+                    <% if (session.rsvps.length === 0) { %>
+                        <p class="text-sm text-slate-500 italic text-center py-4">No one has RSVP'd yet.</p>
+                    <% } %>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column: Action Panel -->
+        <div class="space-y-6">
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl sticky top-6">
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Your RSVP</h3>
+                
+                <% if (!user) { %>
+                    <a href="/auth/discord" class="block w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 px-4 rounded-xl text-center transition-colors">
+                        Login to RSVP
+                    </a>
+                <% } else { %>
+                    <% const myRsvp = session.rsvps.find(r => r.userId === user.id); %>
+                    
+                    <form action="/sessions/<%= session.id %>/rsvp" method="POST" class="space-y-3">
+                        <button type="submit" name="status" value="CONFIRMED" 
+                                class="w-full flex justify-between items-center py-3 px-4 rounded-xl font-bold transition-all border 
+                                <%= myRsvp?.status === 'CONFIRMED' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-emerald-500/50 hover:text-emerald-400' %>">
+                            <span>Join</span>
+                            <% if (myRsvp?.status === 'CONFIRMED') { %><span>✓</span><% } %>
+                        </button>
+
+                        <button type="submit" name="status" value="TENTATIVE" 
+                                class="w-full flex justify-between items-center py-3 px-4 rounded-xl font-bold transition-all border 
+                                <%= myRsvp?.status === 'TENTATIVE' ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-amber-500/50 hover:text-amber-400' %>">
+                            <span>Tentative</span>
+                            <% if (myRsvp?.status === 'TENTATIVE') { %><span>✓</span><% } %>
+                        </button>
+
+                        <button type="submit" name="status" value="DECLINED" 
+                                class="w-full flex justify-between items-center py-3 px-4 rounded-xl font-bold transition-all border 
+                                <%= myRsvp?.status === 'DECLINED' ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-rose-500/50 hover:text-rose-400' %>">
+                            <span>Decline</span>
+                            <% if (myRsvp?.status === 'DECLINED') { %><span>✓</span><% } %>
+                        </button>
+                    </form>
+                <% } %>
+            </section>
+        </div>
+    </div>
+</div>

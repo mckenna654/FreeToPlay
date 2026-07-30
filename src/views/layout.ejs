@@ -6,33 +6,97 @@
     <title>FreeToPlay</title>
     <link href="/styles.css" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen">
-    <nav class="bg-gray-800 p-4 shadow-md">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <a href="/" class="flex items-center gap-2 text-2xl font-bold text-indigo-400">
+<body class="bg-slate-950 text-slate-200 font-sans min-h-screen flex flex-col md:flex-row overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen overflow-y-auto hidden md:flex">
+        <div class="p-6">
+            <a href="/" class="flex items-center gap-3 text-2xl font-black text-emerald-400 tracking-tight">
                 <img src="/full-size.png" alt="FreeToPlay Logo" class="h-8 w-auto">
-                <span>FreeToPlay</span>
+                <span>F2P</span>
             </a>
-            <div>
-                <% if (user) { %>
-                    <div class="flex items-center gap-4">
-                        <% if (user.avatar) { %>
-                            <img src="<%= user.avatar %>" alt="avatar" class="w-8 h-8 rounded-full">
-                        <% } %>
-                        <span class="font-medium"><%= user.username %></span>
-                        <a href="/sessions/new" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md text-sm transition-colors">Schedule Session</a>
-                        <a href="/logout" class="text-gray-400 hover:text-white text-sm">Logout</a>
-                    </div>
-                <% } else { %>
-                    <a href="/auth/discord" class="bg-[#5865F2] hover:bg-[#4752C4] px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-                        Login with Discord
-                    </a>
-                <% } %>
-            </div>
         </div>
-    </nav>
-    <main class="max-w-6xl mx-auto p-4 mt-8">
+
+        <% if (user) { %>
+            <div class="px-6 pb-6">
+                <a href="/sessions/new" class="block w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+                    + New Session
+                </a>
+            </div>
+        <% } %>
+
+        <nav class="flex-1 px-4 space-y-8">
+            <% if (typeof upcomingSessions !== 'undefined') { %>
+            <div>
+                <h3 class="px-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Upcoming</h3>
+                <div class="space-y-1">
+                    <% upcomingSessions.forEach(s => { %>
+                        <a href="/sessions/<%= s.id %>" class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors group">
+                            <% if(s.gameCoverUrl) { %>
+                                <img src="<%= s.gameCoverUrl %>" class="w-6 h-6 rounded object-cover opacity-80 group-hover:opacity-100">
+                            <% } else { %>
+                                <div class="w-6 h-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">🎮</div>
+                            <% } %>
+                            <div class="overflow-hidden">
+                                <p class="text-sm font-medium text-slate-300 truncate"><%= s.title %></p>
+                                <p class="text-xs text-slate-500 truncate"><%= format(new Date(s.startTime), 'EEE, MMM d @ h:mm a') %></p>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            </div>
+            <% } %>
+
+            <% if (typeof activeMembers !== 'undefined') { %>
+            <div>
+                <h3 class="px-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Active Members</h3>
+                <div class="flex flex-wrap gap-2 px-2">
+                    <% activeMembers.forEach(m => { %>
+                        <% if(m.avatar) { %>
+                            <img src="<%= m.avatar %>" title="<%= m.username %>" class="w-8 h-8 rounded-full border border-slate-700 hover:border-emerald-500 transition-colors cursor-pointer">
+                        <% } %>
+                    <% }) %>
+                </div>
+            </div>
+            <% } %>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <% if (user) { %>
+                <div class="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <% if (user.avatar) { %>
+                            <img src="<%= user.avatar %>" alt="avatar" class="w-9 h-9 rounded-full border border-slate-700">
+                        <% } %>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-200"><%= user.username %></span>
+                            <a href="/logout" class="text-xs text-slate-500 hover:text-rose-400 transition-colors">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <a href="/auth/discord" class="flex items-center justify-center gap-2 w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-2.5 px-4 rounded-xl transition-colors">
+                    Login with Discord
+                </a>
+            <% } %>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
+        <a href="/" class="flex items-center gap-2 text-xl font-black text-emerald-400">
+            <img src="/full-size.png" alt="FreeToPlay Logo" class="h-6 w-auto">
+            <span>F2P</span>
+        </a>
+        <% if (!user) { %>
+            <a href="/auth/discord" class="text-xs bg-[#5865F2] px-3 py-1.5 rounded-lg font-bold">Login</a>
+        <% } %>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-screen overflow-y-auto bg-slate-950">
         <%- body %>
     </main>
+
 </body>
 </html>
