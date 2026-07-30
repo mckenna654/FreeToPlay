@@ -1,97 +1,146 @@
 <p align="center">
-  <img src="public/large-logo.png" alt="FreeToPlay Logo" width="400">
+  <img src="public/large-logo.png" alt="FreeToPlay Logo" width="420">
 </p>
 
 <p align="center">
-  <strong>The Ultimate Gaming Session Scheduler for Discord Communities.</strong>
+  <strong>Schedule gaming sessions with friends — web dashboard + Discord bot.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/mckenna654/FreeToPlay?style=flat-square&color=10b981" alt="Release">
-  <img src="https://img.shields.io/github/license/mckenna654/FreeToPlay?style=flat-square&color=6366f1" alt="License">
+  <a href="https://github.com/mckenna654/FreeToPlay/releases"><img src="https://img.shields.io/github/v/release/mckenna654/FreeToPlay?style=flat-square&color=10b981" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/mckenna654/FreeToPlay?style=flat-square&color=6366f1" alt="License"></a>
+  <img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/discord-bot-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord">
 </p>
 
 ---
 
-## 📖 About FreeToPlay
+## About
 
-**FreeToPlay** is a modern, self-hosted web application and Discord Bot designed to solve the hardest part of being an adult gamer: *scheduling time to play with your friends.*
+**FreeToPlay** is a self-hosted web app and Discord bot for adult gaming groups who struggle to line up schedules.
 
-Built with a slick, dark-mode dashboard inspired by modern SaaS apps, FreeToPlay allows users to log in via Discord, schedule upcoming game sessions, and instantly RSVP. 
+Log in with Discord, pick a game, set a time, and let friends RSVP from the web calendar **or** straight from Discord. When someone creates or cancels a session, the bot keeps your channel in sync automatically.
 
-Whenever a session is created, the built-in Discord bot automatically posts a rich embed into your server with **Interactive Buttons**, allowing your squad to RSVP (`Join`, `Tentative`, `Decline`) directly from the Discord chat!
-
-## ✨ Features
-
-- 🎨 **Modern SaaS UI:** Ultra-dark dashboard with a full monthly calendar grid and dedicated event pages.
-- 🔐 **Discord Authentication:** Zero friction. Log in securely using your existing Discord account.
-- 🎮 **RAWG Game Database API:** Autocomplete search for games, automatically pulling in stunning high-res cover art for your dashboard.
-- 🤖 **Interactive Discord Bot:** Posts beautiful game announcements with actionable RSVP buttons that sync live with the web database.
-- 🗑️ **Host Controls & Sync:** Hosts can cleanly cancel events, which automatically deletes the original Discord embed and posts a cancellation notice.
-- 🐳 **Fully Containerized:** Easy to deploy on Unraid, Portainer, or any standard Docker-capable server.
-
-## 🚀 Getting Started (Docker / Unraid)
-
-FreeToPlay is published as a Docker image to the GitHub Container Registry. 
-
-### Unraid Setup
-1. In Unraid, go to the **Docker** tab and click **Add Container**.
-2. **Repository:** `ghcr.io/mckenna654/freetoplay:latest`
-3. **Network:** `Bridge`
-4. Add a **Port**: Container Port `3000` -> Host Port `3000` (or your preferred port).
-5. Add a **Path** (Crucial for database persistence):
-   - Container Path: `/app/data`
-   - Host Path: `/mnt/user/appdata/freetoplay/data/`
-6. Add the following **Environment Variables** (see below).
-
-### Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `DISCORD_CLIENT_ID` | Your Discord App Client ID |
-| `DISCORD_CLIENT_SECRET` | Your Discord App Client Secret |
-| `DISCORD_BOT_TOKEN` | Your Discord Bot Token |
-| `DISCORD_CHANNEL_ID` | The ID of the Discord text channel where the bot should post |
-| `BASE_URL` | Your public URL or local IP (e.g., `http://192.168.1.50:3000`) |
-| `SESSION_SECRET` | A random string used to secure login sessions |
-| `DATABASE_URL` | **MUST BE:** `file:/app/data/prod.db` |
-| `RAWG_API_KEY` | *(Optional)* Free API key from rawg.io for game cover art |
+Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS via Nginx Proxy Manager.
 
 ---
 
-## 🎮 How to enable the Game Database (RAWG API)
-To get automatic game cover art and autocomplete search working when scheduling a session:
-1. Create a free account at [RAWG.io](https://rawg.io/apidocs).
-2. Generate an API Key in your developer dashboard.
-3. Add the `RAWG_API_KEY` environment variable to your Docker container with your key.
-4. Restart the container. Start typing a game name, and the magic happens!
+## Features
 
-## 🤖 Discord Bot Setup
-1. Create an application in the [Discord Developer Portal](https://discord.com/developers/applications).
-2. Under **OAuth2 -> Redirects**, add your callback URL: `http://<YOUR_BASE_URL>/auth/discord/callback`.
-3. Under **Bot**, generate a token. Ensure it has permissions to send messages and embed links.
-4. Use the OAuth2 URL Generator to invite the bot to your server with the `bot` scope.
+### Web dashboard
+- **Ultra-dark SaaS UI** — slate/zinc theme, rounded cards, emerald accents
+- **Monthly calendar** — sessions appear on the correct day with time + title
+- **Sidebar widgets** — upcoming sessions and active members
+- **Event detail pages** — cover art banner, description, host info
+- **RSVP statuses** — Confirmed (teal), Tentative (amber), Declined (rose)
+- **Capacity tracking** — max players + live progress bar (e.g. 3/4 filled)
+- **Host controls** — creators can cancel/delete their own events
+- **Discord login** — Passport OAuth2, no separate accounts
 
-## 🌐 Hosting Externally (Reverse Proxy / Nginx Proxy Manager)
-If you want to host FreeToPlay securely on a custom domain (e.g., `https://f2p.yourdomain.com`), the app natively supports reverse proxies and secure cookies. 
+### Game search & art
+- **RAWG API autocomplete** — type a game name, pick from live results
+- **Cover art** — pulled automatically onto the dashboard and Discord embeds
+- Works without an API key (manual game names still work)
 
-1. **Update Environment Variable:** Change your container's `BASE_URL` to your full HTTPS domain (`https://f2p.yourdomain.com`).
-2. **Update Discord Portal:** Go back to your Discord Application, navigate to **OAuth2 -> Redirects**, and add your new HTTPS callback URL (`https://f2p.yourdomain.com/auth/discord/callback`).
-3. **NPM Setup:** In Nginx Proxy Manager, create a new Proxy Host:
-   - **Domain:** `f2p.yourdomain.com`
-   - **Forward Hostname / IP:** Your Unraid/Docker server's local IP (e.g., `192.168.1.50`).
-   - **Forward Port:** `3000` (or your mapped port).
-   - **SSL:** Request a Let's Encrypt cert, and enable **Force SSL**.
+### Discord bot
+- **Rich embeds** on new sessions (title, game, time, slots, host, cover art)
+- **Interactive buttons** — Join / Tentative / Decline (syncs to the database)
+- **Web Dashboard button** — opens your calendar so others can host too
+- **Clickable event title** — links to that session’s web page
+- **Cancellation sync** — deletes the original embed and posts a cancel notice
 
-## 🛠️ Development
+### Deploy & ops
+- **Docker / GHCR image** — `ghcr.io/mckenna654/freetoplay:latest`
+- **SQLite + Prisma** — simple single-file DB on a volume
+- **Reverse proxy ready** — trust proxy + secure cookies for HTTPS domains
+- **MIT licensed**
 
-To run the project locally without Docker:
+---
+
+## Quick start (Docker / Unraid)
+
+**Image:** `ghcr.io/mckenna654/freetoplay:latest`
+
+| Setting | Value |
+|--------|--------|
+| Network | Bridge |
+| Port | `3000` → `3000` |
+| Path | Host `/mnt/user/appdata/freetoplay/data/` → Container `/app/data` |
+
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DISCORD_CLIENT_ID` | Yes | Discord application client ID |
+| `DISCORD_CLIENT_SECRET` | Yes | Discord application client secret |
+| `DISCORD_BOT_TOKEN` | Yes | Bot token |
+| `DISCORD_CHANNEL_ID` | Yes | Channel ID for session posts |
+| `BASE_URL` | Yes | Public URL, e.g. `https://f2p.example.com` or `http://192.168.1.50:3000` |
+| `SESSION_SECRET` | Yes | Random string for login cookies |
+| `DATABASE_URL` | Yes | Must be `file:/app/data/prod.db` |
+| `RAWG_API_KEY` | No | Free key from [rawg.io](https://rawg.io/apidocs) for game search/art |
+| `PORT` | No | Defaults to `3000` |
+
+---
+
+## Discord setup
+
+1. Create an app in the [Discord Developer Portal](https://discord.com/developers/applications).
+2. **OAuth2 → Redirects:** add  
+   `{BASE_URL}/auth/discord/callback`  
+   Example: `https://f2p.example.com/auth/discord/callback`
+3. Create a **Bot**, copy the token, enable message/embed permissions.
+4. Invite the bot with the `bot` scope (Send Messages, Embed Links, View Channels).
+5. Enable **Developer Mode** in Discord → right-click your channel → **Copy Channel ID**.
+
+---
+
+## RAWG game database (optional)
+
+1. Sign up at [rawg.io/apidocs](https://rawg.io/apidocs) and create an API key.
+2. Set `RAWG_API_KEY` on the container and restart.
+3. On **Schedule Session**, type 3+ letters in **Game Name** for autocomplete + cover art.
+
+---
+
+## External hosting (Nginx Proxy Manager)
+
+1. Set `BASE_URL` to your HTTPS domain, e.g. `https://f2p.example.com`.
+2. Add the same domain callback in Discord OAuth2 redirects.
+3. In NPM, add a Proxy Host:
+   - **Domain:** `f2p.example.com`
+   - **Forward to:** your server IP, port `3000`
+   - **SSL:** Let’s Encrypt + Force SSL
+   - Enable Websockets if available
+
+---
+
+## Local development
+
 ```bash
+git clone https://github.com/mckenna654/FreeToPlay.git
+cd FreeToPlay
+cp .env.example .env   # fill in Discord + secrets
 npm install
 npx prisma migrate dev
 npm run dev
 ```
 
-## 📝 License
+Open `http://localhost:3000`.
 
-This project is licensed under the [MIT License](LICENSE).
+---
+
+## Stack
+
+- **Node.js** + **Express** + **EJS**
+- **Prisma** + **SQLite**
+- **discord.js**
+- **Passport Discord OAuth**
+- **Tailwind CSS**
+- **Docker** (multi-stage Alpine image)
+
+---
+
+## License
+
+[MIT](LICENSE) © mckenna654
