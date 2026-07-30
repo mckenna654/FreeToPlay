@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import app from './web';
-import bot from './bot';
+import { client as bot } from './bot';
 
 const PORT = process.env.PORT || 3000;
 
@@ -9,7 +9,7 @@ app.listen(PORT, () => {
 });
 
 if (process.env.DISCORD_BOT_TOKEN) {
-    bot.login(process.env.DISCORD_BOT_TOKEN).catch(err => {
+    bot.login(process.env.DISCORD_BOT_TOKEN).catch((err: any) => {
         console.error('Failed to log in Discord bot:', err);
     });
 } else {
