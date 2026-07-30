@@ -5,8 +5,76 @@ export const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 
+const startCleanupCron = () => {
+    // Run every 10 minutes to check for expired sessions
+    setInterval(async () => {
+        try {
+            const now = new Date();
+            // 6 hours ago
+            const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+            
+            const expiredSessions = await prisma.gameSession.findMany({
+                where: {
+                    startTime: { lte: sixHoursAgo },
+                    discordMessageId: { not: null }
+                }
+            });
+
+            if (expiredSessions.length === 0) return;
+
+            const channelId = process.env.DISCORD_CHANNEL_ID;
+            if (!channelId) return;
+
+            const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null;
+            if (!channel) return;
+
+            for (const session of expiredSessions) {
+                // 1. Delete original active message (with buttons)
+                if (session.discordMessageId) {
+                    try {
+                        const oldMsg = await channel.messages.fetch(session.discordMessageId);
+                        if (oldMsg) await oldMsg.delete();
+                    } catch (e) {
+                        console.error(`Could not delete old message for session ${session.id}:`, e);
+                    }
+                }
+
+                // 2. Unlink message in DB so this doesn't run again for this session
+                await prisma.gameSession.update({
+                    where: { id: session.id },
+                    data: { discordMessageId: null }
+                });
+
+                // 3. Post 'Session Over' message
+                try {
+                    const embed = new EmbedBuilder()
+                        .setTitle(`🏁 Session Concluded: ${session.title}`)
+                        .setColor(0x64748B) // Slate 500
+                        .setDescription(`The session for **${session.gameTitle}** has ended. Hope you had fun!`);
+
+                    const overMsg = await channel.send({ embeds: [embed] });
+
+                    // 4. Delete the 'Session Over' message after 2 hours (2 * 60 * 60 * 1000 ms)
+                    setTimeout(async () => {
+                        try {
+                            await overMsg.delete();
+                        } catch (e) {
+                            console.error('Could not delete session over message:', e);
+                        }
+                    }, 2 * 60 * 60 * 1000);
+                } catch (e) {
+                    console.error('Could not send session over message:', e);
+                }
+            }
+        } catch (error) {
+            console.error('Cleanup cron job error:', error);
+        }
+    }, 10 * 60 * 1000);
+};
+
 client.once('clientReady', () => {
     console.log(`Bot logged in as ${client.user?.tag}`);
+    startCleanupCron();
 });
 
 // Handle Button Interactions
