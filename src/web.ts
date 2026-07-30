@@ -13,12 +13,12 @@ const app = express();
 app.use(expressLayouts);
 app.set('layout', 'layout');
 app.set('view engine', 'ejs');
-app.set('views', path.resolve(__dirname, '../src/views'));
+app.set('views', path.resolve(__dirname, '../../src/views'));
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.resolve(__dirname, '../public')));
+app.use(express.static(path.resolve(__dirname, '../../public')));
 
 // Sessions
 app.use(session({
