@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/full-size.png" alt="FreeToPlay Logo" width="400">
+  <img src="public/large-logo.png" alt="FreeToPlay Logo" width="400">
 </p>
 
 <p align="center">

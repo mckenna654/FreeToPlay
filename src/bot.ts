@@ -82,7 +82,7 @@ export const notifyNewSession = async (session: { id: string, gameTitle: string;
             const embed = new EmbedBuilder()
                 .setTitle(`🎮 ${session.title}`)
                 .setURL(eventUrl)
-                .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/discord-size.png')
+                .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/small-logo.png')
                 .setColor(0x0F172A) // Slate 900
                 .setDescription(`**${session.gameTitle}**\n\n${session.description}`)
                 .addFields(
