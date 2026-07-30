@@ -27,6 +27,7 @@ Whenever a session is created, the built-in Discord bot automatically posts a ri
 - 🔐 **Discord Authentication:** Zero friction. Log in securely using your existing Discord account.
 - 🎮 **RAWG Game Database API:** Autocomplete search for games, automatically pulling in stunning high-res cover art for your dashboard.
 - 🤖 **Interactive Discord Bot:** Posts beautiful game announcements with actionable RSVP buttons that sync live with the web database.
+- 🗑️ **Host Controls & Sync:** Hosts can cleanly cancel events, which automatically deletes the original Discord embed and posts a cancellation notice.
 - 🐳 **Fully Containerized:** Easy to deploy on Unraid, Portainer, or any standard Docker-capable server.
 
 ## 🚀 Getting Started (Docker / Unraid)
