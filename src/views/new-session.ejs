@@ -1,0 +1,35 @@
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gray-800 rounded-lg p-8 shadow-lg border border-gray-700">
+        <h1 class="text-3xl font-bold mb-6 text-indigo-400">Schedule a Gaming Session</h1>
+        
+        <form action="/sessions" method="POST" class="space-y-6">
+            <div>
+                <label for="game" class="block text-sm font-medium text-gray-300 mb-1">Game Name</label>
+                <input type="text" id="game" name="game" required placeholder="e.g. Halo Combat Evolved" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div>
+                <label for="content" class="block text-sm font-medium text-gray-300 mb-1">Details (Content, Rules, etc.)</label>
+                <textarea id="content" name="content" rows="3" required placeholder="e.g. Co-Op Campaign on Legendary" class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-300 mb-1">Date</label>
+                    <input type="date" id="date" name="date" required class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="time" class="block text-sm font-medium text-gray-300 mb-1">Time (Local)</label>
+                    <input type="time" id="time" name="time" required class="w-full bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-4">
+                <a href="/" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors">Cancel</a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded transition-colors">
+                    Create Session
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

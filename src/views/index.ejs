@@ -1,0 +1,72 @@
+<div class="mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold">Upcoming Sessions</h1>
+</div>
+
+<% if (sessions.length === 0) { %>
+    <div class="bg-gray-800 rounded-lg p-8 text-center text-gray-400">
+        <p class="text-lg">No upcoming gaming sessions found.</p>
+        <% if (user) { %>
+            <p class="mt-4"><a href="/sessions/new" class="text-indigo-400 hover:underline">Schedule one now!</a></p>
+        <% } else { %>
+            <p class="mt-4">Login to schedule one!</p>
+        <% } %>
+    </div>
+<% } else { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% sessions.forEach(session => { %>
+            <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 shadow-lg flex flex-col">
+                <div class="p-6 flex-grow">
+                    <h2 class="text-xl font-bold text-indigo-300 mb-2"><%= session.game %></h2>
+                    <p class="text-gray-300 mb-4 whitespace-pre-wrap"><%= session.content %></p>
+                    
+                    <div class="flex items-center text-sm text-gray-400 mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <% 
+                            const d = new Date(session.startTime);
+                            const dateStr = d.toLocaleDateString();
+                            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        %>
+                        <%= dateStr %> at <%= timeStr %>
+                    </div>
+
+                    <div class="mt-6 border-t border-gray-700 pt-4">
+                        <h3 class="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wide">Participants (<%= session.participants.length %>)</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <% session.participants.forEach(p => { %>
+                                <div class="flex items-center gap-2 bg-gray-600 px-2 py-1 rounded-full text-xs">
+                                    <% if (p.user.avatar) { %>
+                                        <img src="<%= p.user.avatar %>" alt="avatar" class="w-4 h-4 rounded-full">
+                                    <% } %>
+                                    <span><%= p.user.username %></span>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-4 border-t border-gray-600 mt-auto">
+                    <% if (user) { %>
+                        <% const isParticipating = session.participants.some(p => p.userId === user.id); %>
+                        <% if (isParticipating) { %>
+                            <form action="/sessions/<%= session.id %>/leave" method="POST">
+                                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+                                    Leave Session
+                                </button>
+                            </form>
+                        <% } else { %>
+                            <form action="/sessions/<%= session.id %>/join" method="POST">
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+                                    Join Session
+                                </button>
+                            </form>
+                        <% } %>
+                    <% } else { %>
+                        <a href="/auth/discord" class="block text-center w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+                            Login to Join
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
