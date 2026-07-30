@@ -1,5 +1,9 @@
 # FreeToPlay 🎮
 
+<p align="center">
+  <img src="public/full-size.png" alt="FreeToPlay Logo" width="400">
+</p>
+
 FreeToPlay is a simple Discord Bot and web application designed to help you and your friends easily schedule gaming sessions. With our busy lives, it's difficult to align schedules. FreeToPlay allows users to authenticate via Discord, create gaming sessions (e.g., "Halo Combat Evolved - Co-Op Campaign"), and allow others to join. The bot posts a message to a designated Discord channel whenever a session is created or someone joins!
 
 ## Features
