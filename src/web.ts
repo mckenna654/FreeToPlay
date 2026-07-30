@@ -6,7 +6,7 @@ import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
 import prisma from './prisma';
 import { notifyNewSession, notifySessionCancelled } from './bot';
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday } from 'date-fns';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 
 const app = express();
 
@@ -104,13 +104,24 @@ app.get('/api/games/search', async (req, res) => {
 });
 
 app.get('/', async (req, res) => {
+    // Determine Target Month
+    const monthQuery = req.query.month as string;
+    let targetDate = new Date();
+    if (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery)) {
+        const [year, month] = monthQuery.split('-');
+        targetDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    }
+
     // Generate Calendar Days
-    const today = new Date();
-    const monthStart = startOfMonth(today);
-    const monthEnd = endOfMonth(today);
+    const monthStart = startOfMonth(targetDate);
+    const monthEnd = endOfMonth(targetDate);
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
     const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    // Navigation links
+    const prevMonth = format(subMonths(monthStart, 1), 'yyyy-MM');
+    const nextMonth = format(addMonths(monthStart, 1), 'yyyy-MM');
 
     // Fetch all sessions in the interval
     const sessions = await prisma.gameSession.findMany({
@@ -127,7 +138,8 @@ app.get('/', async (req, res) => {
         }
     });
 
-    // Upcoming widget data (Future sessions)
+    // Upcoming widget data (Future sessions globally)
+    const today = new Date();
     const upcomingSessions = await prisma.gameSession.findMany({
         where: { startTime: { gte: today } },
         orderBy: { startTime: 'asc' },
@@ -140,15 +152,17 @@ app.get('/', async (req, res) => {
         orderBy: { id: 'desc' }
     });
 
-    res.render('index', { 
-        sessions, 
-        upcomingSessions, 
-        activeMembers, 
-        calendarDays, 
-        monthStart, 
-        isSameMonth, 
-        isToday, 
-        format 
+    res.render('index', {
+        sessions,
+        upcomingSessions,
+        activeMembers,
+        calendarDays,
+        monthStart,
+        prevMonth,
+        nextMonth,
+        isSameMonth,
+        isToday,
+        format
     });
 });
 

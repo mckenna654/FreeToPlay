@@ -1,8 +1,16 @@
 <div class="p-6 md:p-10 max-w-7xl mx-auto">
     <div class="flex justify-between items-end mb-8">
         <div>
-            <h1 class="text-3xl font-black text-slate-100"><%= format(monthStart, 'MMMM yyyy') %></h1>
-            <p class="text-slate-400 mt-1">Schedule and join upcoming game sessions</p>
+            <div class="flex items-center gap-4">
+                <a href="/?month=<%= prevMonth %>" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </a>
+                <h1 class="text-3xl font-black text-slate-100 min-w-[200px] text-center"><%= format(monthStart, 'MMMM yyyy') %></h1>
+                <a href="/?month=<%= nextMonth %>" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            </div>
+            <p class="text-slate-400 mt-2">Schedule and join upcoming game sessions</p>
         </div>
     </div>
 
