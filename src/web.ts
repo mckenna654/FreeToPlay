@@ -5,7 +5,7 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
 import prisma from './prisma';
-import { notifyNewSession, notifySessionCancelled } from './bot';
+import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 
 const app = express();
@@ -230,7 +230,10 @@ app.post('/sessions', async (req, res) => {
             if (messageId) {
                 await prisma.gameSession.update({
                     where: { id: session.id },
-                    data: { discordMessageId: messageId }
+                    data: { 
+                        discordMessageId: messageId,
+                        discordChannelId: process.env.DISCORD_CHANNEL_ID
+                    }
                 });
             }
         }
@@ -278,6 +281,9 @@ app.post('/sessions/:id/rsvp', async (req, res) => {
                     status
                 }
             });
+
+            // Update Discord message embed to reflect new slot count
+            await updateSessionDiscordMessage(sessionId);
         }
         res.redirect(`/sessions/${sessionId}`);
     } catch (error) {

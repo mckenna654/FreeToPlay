@@ -121,6 +121,9 @@ client.on('interactionCreate', async (interaction: Interaction) => {
                 }
             });
 
+            // Re-render and update the original Discord message
+            await updateSessionDiscordMessage(sessionId);
+
             const session = await prisma.gameSession.findUnique({
                 where: { id: sessionId },
                 include: { rsvps: true }
@@ -189,6 +192,68 @@ export const notifyNewSession = async (session: { id: string, gameTitle: string;
     } catch (error) {
         console.error('Failed to send Discord notification:', error);
         return null;
+    }
+};
+
+export const updateSessionDiscordMessage = async (sessionId: string) => {
+    try {
+        const session = await prisma.gameSession.findUnique({
+            where: { id: sessionId },
+            include: { creator: true, rsvps: true }
+        });
+
+        if (!session || !session.discordChannelId || !session.discordMessageId) return;
+
+        const channel = await client.channels.fetch(session.discordChannelId).catch(() => null) as TextChannel | null;
+        if (!channel) return;
+
+        const message = await channel.messages.fetch(session.discordMessageId).catch(() => null);
+        if (!message) return;
+
+        const confirmedCount = session.rsvps.filter(r => r.status === 'CONFIRMED').length;
+
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+        const eventUrl = `${baseUrl}/sessions/${session.id}`;
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🎮 ${session.title}`)
+            .setURL(eventUrl)
+            .setThumbnail('https://github.com/mckenna654/FreeToPlay/raw/main/public/small-logo.png')
+            .setColor(0x0F172A)
+            .setDescription(`**${session.gameTitle}**\n\n${session.description}`)
+            .addFields(
+                { name: 'Time', value: `<t:${Math.floor(session.startTime.getTime() / 1000)}:F>`, inline: true },
+                { name: 'Slots', value: `${confirmedCount} / ${session.maxPlayers} Filled`, inline: true },
+                { name: 'Host', value: session.creator.username, inline: true }
+            );
+
+        if (session.gameCoverUrl) {
+            embed.setImage(session.gameCoverUrl);
+        }
+
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`confirm_${session.id}`)
+                    .setLabel('Join (Confirmed)')
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId(`tentative_${session.id}`)
+                    .setLabel('Tentative')
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId(`decline_${session.id}`)
+                    .setLabel('Decline')
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setLabel('Web Dashboard')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(baseUrl)
+            );
+
+        await message.edit({ embeds: [embed], components: [row] });
+    } catch (error) {
+        console.error(`Failed to update Discord message for session ${sessionId}:`, error);
     }
 };
 
