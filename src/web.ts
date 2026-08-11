@@ -7,6 +7,11 @@ import expressLayouts from 'express-ejs-layouts';
 import prisma from './prisma';
 import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
+import dns from 'dns';
+
+// Force IPv4 DNS resolution for fetch/axios to fix ENOTFOUND errors
+dns.setDefaultResultOrder('ipv4first');
+
 
 const app = express();
 
