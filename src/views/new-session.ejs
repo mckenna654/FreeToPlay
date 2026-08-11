@@ -68,8 +68,17 @@
         }
 
         debounceTimer = setTimeout(async () => {
+            // Show loading state
+            resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">Searching IGDB...</div>';
+            resultsContainer.classList.remove('hidden');
+
             try {
                 const response = await fetch(`/api/games/search?q=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    throw new Error('API Error');
+                }
+
                 const games = await response.json();
                 
                 if (games.length > 0) {
@@ -80,13 +89,12 @@
                             <span class="text-slate-200 font-bold text-sm">${game.name}</span>
                         </div>
                     `).join('');
-                    resultsContainer.classList.remove('hidden');
                 } else {
-                    resultsContainer.classList.add('hidden');
+                    resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">No games found or IGDB keys missing.</div>';
                 }
             } catch (err) {
                 console.error(err);
-                resultsContainer.classList.add('hidden');
+                resultsContainer.innerHTML = '<div class="p-4 text-center text-rose-400 text-sm">Error connecting to game database.</div>';
             }
         }, 500);
     });
