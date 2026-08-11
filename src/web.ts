@@ -84,21 +84,75 @@ app.use((req, res, next) => {
     next();
 });
 
+// IGDB Token Caching
+let igdbAccessToken: string | null = null;
+let igdbTokenExpiry: number = 0;
+
+async function getIGDBToken() {
+    if (igdbAccessToken && Date.now() < igdbTokenExpiry) {
+        return igdbAccessToken;
+    }
+    try {
+        const response = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${process.env.IGDB_CLIENT_ID}&client_secret=${process.env.IGDB_CLIENT_SECRET}&grant_type=client_credentials`, { method: 'POST' });
+        
+        if (!response.ok) {
+            console.error('Twitch Auth Failed:', await response.text());
+            return null;
+        }
+
+        const data = await response.json();
+        if (data.access_token) {
+            igdbAccessToken = data.access_token;
+            // expires_in is in seconds. Subtract 5 mins for safety.
+            igdbTokenExpiry = Date.now() + ((data.expires_in - 300) * 1000); 
+        }
+    } catch (e) {
+        console.error('Failed to fetch IGDB token (Network/DNS error):', e);
+    }
+    return igdbAccessToken;
+}
+
 // Routes
 app.get('/api/games/search', async (req, res) => {
-    if (!process.env.RAWG_API_KEY) {
+    if (!process.env.IGDB_CLIENT_ID || !process.env.IGDB_CLIENT_SECRET) {
         return res.json([]);
     }
-    
+
     const query = req.query.q as string;
     if (!query) return res.json([]);
 
     try {
-        const response = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(query)}&key=${process.env.RAWG_API_KEY}&page_size=5`);
+        const token = await getIGDBToken();
+        if (!token) return res.json([]);
+
+        // Sanitize query to prevent syntax errors in IGDB apicalypse
+        const safeQuery = query.replace(/"/g, '');
+
+        const response = await fetch('https://api.igdb.com/v4/games', {
+            method: 'POST',
+            headers: {
+                'Client-ID': process.env.IGDB_CLIENT_ID,
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'text/plain'
+            },
+            body: `search "${safeQuery}"; fields name, cover.image_id; limit 5;`
+        });
+        
         const data = await response.json();
-        res.json(data.results || []);
+        
+        if (Array.isArray(data)) {
+            // Map IGDB format to what our frontend expects
+            const results = data.map((game: any) => ({
+                name: game.name,
+                background_image: game.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg` : null
+            }));
+            return res.json(results);
+        }
+        
+        res.json([]);
     } catch (error) {
-        console.error('Error fetching games from RAWG:', error);
+        console.error('Error fetching games from IGDB:', error);
         res.json([]);
     }
 });
