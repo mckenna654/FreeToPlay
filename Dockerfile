@@ -1,9 +1,9 @@
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Install dependencies for building native modules (like better-sqlite3)
-RUN apk add --no-cache python3 make g++ 
+# Install dependencies for building native modules
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/* 
 
 COPY package*.json ./
 RUN npm ci
@@ -17,12 +17,12 @@ ENV DATABASE_URL="file:./dev.db"
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 
-# Install dependencies for running sqlite
-RUN apk add --no-cache python3 make g++ 
+# Install sqlite dependencies
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/* 
 
 # We need the production dependencies, or we can just copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
