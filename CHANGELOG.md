@@ -15,9 +15,13 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 ## [1.6.0] — 2026-07-31
 
 ### Changed
-- Swapped game search provider from RAWG (unreliable) to **IGDB** (Twitch).
-- Autocomplete search now securely fetches an OAuth token, caches it, and queries IGDB.
-- `RAWG_API_KEY` has been replaced with `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET`.
+- **Game Search Provider:** Replaced RAWG with the much faster and more reliable **IGDB API** (powered by Twitch).
+- Autocomplete search now securely authenticates with Twitch, caches the OAuth token automatically, and pulls high-resolution box art.
+- `RAWG_API_KEY` has been removed and replaced with `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET`.
+
+### Fixed
+- Added robust loading states ("Searching IGDB...") and explicit error messaging to the search dropdown.
+- Fixed severe Node.js 20 networking bugs (`ENOTFOUND`) by shifting the Docker base image to Debian `bookworm-slim` and globally forcing `ipv4first` DNS resolution to guarantee API connectivity on all Unraid networks.
 
 ---
 
