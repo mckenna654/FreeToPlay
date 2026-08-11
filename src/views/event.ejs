@@ -1,8 +1,14 @@
 <div class="max-w-4xl mx-auto p-6 md:p-10">
     <!-- Header/Cover Art -->
+    <% 
+        let eventCover = session.gameCoverUrl;
+        if (eventCover && eventCover.includes('t_cover_big')) {
+            eventCover = eventCover.replace('t_cover_big', 't_1080p');
+        }
+    %>
     <div class="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-8 border border-slate-800 shadow-2xl">
-        <% if(session.gameCoverUrl) { %>
-            <img src="<%= session.gameCoverUrl %>" class="absolute inset-0 w-full h-full object-cover">
+        <% if(eventCover) { %>
+            <img src="<%= eventCover %>" class="absolute inset-0 w-full h-full object-cover object-center">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
         <% } else { %>
             <div class="absolute inset-0 bg-slate-800"></div>

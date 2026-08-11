@@ -31,8 +31,14 @@
                 <div class="space-y-1">
                     <% upcomingSessions.forEach(s => { %>
                         <a href="/sessions/<%= s.id %>" class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors group">
-                            <% if(s.gameCoverUrl) { %>
-                                <img src="<%= s.gameCoverUrl %>" class="w-6 h-6 rounded object-cover opacity-80 group-hover:opacity-100">
+                            <% 
+                                let sidebarCover = s.gameCoverUrl;
+                                if (sidebarCover && sidebarCover.includes('t_cover_big')) {
+                                    sidebarCover = sidebarCover.replace('t_cover_big', 't_1080p');
+                                }
+                            %>
+                            <% if(sidebarCover) { %>
+                                <img src="<%= sidebarCover %>" class="w-8 h-6 rounded object-cover opacity-80 group-hover:opacity-100">
                             <% } else { %>
                                 <div class="w-6 h-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">🎮</div>
                             <% } %>
