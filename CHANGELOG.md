@@ -5,6 +5,13 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.6.1] — 2026-07-31
+
+### Added
+- Added visual loading states and error messages to the IGDB autocomplete search dropdown so users know when the API is fetching or failing.
+
+---
+
 ## [1.6.0] — 2026-07-31
 
 ### Changed
