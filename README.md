@@ -38,7 +38,7 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 - **Discord login** — Passport OAuth2, no separate accounts
 
 ### Game search & art
-- **RAWG API autocomplete** — type a game name, pick from live results
+- **IGDB API autocomplete** — type a game name, pick from live results (powered by Twitch)
 - **Cover art** — pulled automatically onto the dashboard and Discord embeds
 - Works without an API key (manual game names still work)
 
@@ -78,7 +78,8 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 | `BASE_URL` | Yes | Public URL, e.g. `https://f2p.example.com` or `http://192.168.1.50:3000` |
 | `SESSION_SECRET` | Yes | Random string for login cookies |
 | `DATABASE_URL` | Yes | Must be `file:/app/data/prod.db` |
-| `RAWG_API_KEY` | No | Free key from [rawg.io](https://rawg.io/apidocs) for game search/art |
+| `IGDB_CLIENT_ID` | No | Twitch/IGDB Client ID for game search/art |
+| `IGDB_CLIENT_SECRET` | No | Twitch/IGDB Client Secret |
 | `PORT` | No | Defaults to `3000` |
 
 ---
@@ -95,11 +96,13 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 
 ---
 
-## RAWG game database (optional)
+## IGDB game database (optional)
 
-1. Sign up at [rawg.io/apidocs](https://rawg.io/apidocs) and create an API key.
-2. Set `RAWG_API_KEY` on the container and restart.
-3. On **Schedule Session**, type 3+ letters in **Game Name** for autocomplete + cover art.
+FreeToPlay uses Twitch's IGDB to power game search and cover art.
+1. Sign up at [dev.twitch.tv](https://dev.twitch.tv/console) and register an application.
+2. Generate a Client Secret.
+3. Set `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` as environment variables on your container.
+4. Restart the container. On **Schedule Session**, type 3+ letters in **Game Name** for autocomplete + cover art.
 
 ---
 
@@ -147,7 +150,8 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
-| **1.5.1** | Docker build fix + migration recovery guidance (**use this**) |
+| **1.6.0** | Swapped unreliable RAWG API for IGDB |
+| **1.5.1** | Docker build fix + migration recovery guidance |
 | **1.5.0** | Branding, MIT license, docs polish |
 | **1.4.0** | Discord web links, reverse proxy / HTTPS support |
 | **1.3.0** | Host cancel + Discord cancellation sync |

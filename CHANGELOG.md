@@ -5,6 +5,15 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.6.0] — 2026-07-31
+
+### Changed
+- Swapped game search provider from RAWG (unreliable) to **IGDB** (Twitch).
+- Autocomplete search now securely fetches an OAuth token, caches it, and queries IGDB.
+- `RAWG_API_KEY` has been replaced with `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET`.
+
+---
+
 ## [1.5.1] — 2026-07-31
 
 ### Fixed
