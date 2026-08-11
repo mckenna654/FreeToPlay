@@ -141,17 +141,22 @@ app.get('/api/games/search', async (req, res) => {
                 'Accept': 'application/json',
                 'Content-Type': 'text/plain'
             },
-            body: `search "${safeQuery}"; fields name, cover.image_id; limit 5;`
+            body: `search "${safeQuery}"; fields name, cover.image_id, artworks.image_id; limit 5;`
         });
         
         const data = await response.json();
         
         if (Array.isArray(data)) {
             // Map IGDB format to what our frontend expects
-            const results = data.map((game: any) => ({
-                name: game.name,
-                background_image: game.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg` : null
-            }));
+            const results = data.map((game: any) => {
+                // Prefer 16:9 artworks for banners, fallback to cover art
+                const imageId = (game.artworks && game.artworks.length > 0) ? game.artworks[0].image_id : game.cover?.image_id;
+                return {
+                    name: game.name,
+                    // Use 1080p high-res image instead of small cover
+                    background_image: imageId ? `https://images.igdb.com/igdb/image/upload/t_1080p/${imageId}.jpg` : null
+                };
+            });
             return res.json(results);
         }
         
