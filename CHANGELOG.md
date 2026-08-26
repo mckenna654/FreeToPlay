@@ -22,9 +22,9 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 ## [1.6.0] — 2026-07-31
 
 ### Changed
-- **Game Search Provider:** Replaced RAWG with the much faster and more reliable **IGDB API** (powered by Twitch).
+- **Game Search Provider:** Migrated game search and artwork to the **IGDB API** (powered by Twitch).
 - Autocomplete search now securely authenticates with Twitch, caches the OAuth token automatically, and pulls high-resolution box art.
-- `RAWG_API_KEY` has been removed and replaced with `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET`.
+- Added `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` for IGDB authentication.
 
 ### Fixed
 - Added robust loading states ("Searching IGDB...") and explicit error messaging to the search dropdown.
@@ -98,7 +98,7 @@ Then set the image to `ghcr.io/mckenna654/freetoplay:latest` (or `:v1.5.1`) and 
 ## [1.1.0] — 2026-07-31
 
 ### Added
-- RAWG Video Games Database API integration
+- Video game database API integration
 - Game name autocomplete when scheduling
 - Automatic cover art on dashboard cards and Discord embeds
 
