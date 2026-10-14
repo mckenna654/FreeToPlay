@@ -15,7 +15,7 @@ ENV DATABASE_URL="file:./dev.db"
 
 # Generate Prisma Client and build TypeScript
 RUN npx prisma generate
-RUN npm run build
+RUN npm test
 
 FROM node:20-bookworm-slim AS runner
 

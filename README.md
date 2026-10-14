@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="public/large-logo.png" alt="FreeToPlay Logo" width="420">
+  <img src="public/large-logo.png" alt="FreeToPlay — your next session starts here" width="560">
 </p>
 
 <p align="center">
-  <strong>Schedule gaming sessions with friends — web dashboard + Discord bot.</strong>
+  <strong>Squad up. Game on. Your gaming lobby + Discord bot.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/mckenna654/FreeToPlay/releases"><img src="https://img.shields.io/github/v/release/mckenna654/FreeToPlay?style=flat-square&color=10b981" alt="Release"></a>
+  <a href="https://github.com/mckenna654/FreeToPlay/releases"><img src="https://img.shields.io/github/v/release/mckenna654/FreeToPlay?style=flat-square&color=a98cff" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/mckenna654/FreeToPlay?style=flat-square&color=6366f1" alt="License"></a>
   <img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/discord-bot-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord">
@@ -28,11 +28,15 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 ## Features
 
 ### Web dashboard
-- **Ultra-dark SaaS UI** — slate/zinc theme, rounded cards, emerald accents
-- **Monthly calendar** — sessions appear on the correct day with time + title
-- **Sidebar widgets** — upcoming sessions and active members
-- **Event detail pages** — cover art banner, description, host info
-- **RSVP statuses** — Confirmed (teal), Tentative (amber), Declined (rose)
+- **Gaming lobby UI** — midnight backgrounds, violet and lime accents, bold game-menu typography, and original sci-fi artwork
+- **Calendar and agenda** — monthly planning on desktop; readable agenda by default on phones
+- **Find your next session** — search titles, games, or hosts; filter by open spots or your RSVPs
+- **Upcoming session tickets** — game artwork, dates, and remaining spots at a glance
+- **Event detail pages** — game artwork, host, notes, and a clear roster
+- **RSVP statuses** — Going, Maybe, and Can’t make it, synchronized with Discord
+- **Calendar downloads and sharing** — download an individual session as an .ics file or copy its invite link
+- **Guided scheduling** — live preview, keyboard-accessible game search, and validation that preserves your input
+- **Timezone-aware creation** — browser-local start times are stored as a precise instant; event details display your local time
 - **Capacity tracking** — max players + live progress bar (e.g. 3/4 filled)
 - **Host controls** — creators can cancel/delete their own events
 - **Discord login** — Passport OAuth2, no separate accounts
@@ -54,6 +58,32 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 - **SQLite + Prisma** — simple single-file DB on a volume
 - **Reverse proxy ready** — trust proxy + secure cookies for HTTPS domains
 - **MIT licensed**
+
+---
+
+## Screenshots
+
+The v1.7.0 gaming lobby: dark surfaces, violet/lime accents, bold type, and original sci-fi artwork. Screenshots use sample sessions and players; controller tiles show the fallback when a session has no IGDB artwork.
+
+### Desktop lobby
+
+![FreeToPlay gaming lobby with upcoming sessions and a monthly calendar](docs/screenshots/lobby.png)
+
+<details>
+<summary>Session details and scheduling</summary>
+
+![Session details, roster, RSVP controls, and calendar download](docs/screenshots/session.png)
+
+![Create a session with game search, local-time scheduling, and a live preview](docs/screenshots/create-session.png)
+
+</details>
+
+### Mobile
+
+<p>
+  <img src="docs/screenshots/mobile.png" alt="Mobile lobby and agenda" width="300">
+  <img src="docs/screenshots/mobile-session.png" alt="Mobile session details and RSVP" width="300">
+</p>
 
 ---
 
@@ -102,7 +132,7 @@ FreeToPlay uses Twitch's IGDB to power game search and cover art.
 1. Sign up at [dev.twitch.tv](https://dev.twitch.tv/console) and register an application.
 2. Generate a Client Secret.
 3. Set `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` as environment variables on your container.
-4. Restart the container. On **Schedule Session**, type 3+ letters in **Game Name** for autocomplete + cover art.
+4. Restart the container. On **Host a session**, type 3+ letters in **Game** for autocomplete + cover art.
 
 ---
 
@@ -131,6 +161,12 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+Calendar month boundaries use the server timezone, shown below the schedule. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Upcoming ticket dates and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
+
+Run `npm test` to build and check the app against an isolated temporary SQLite database. Tests cover page rendering, search/filter state, session validation and creation, RSVP/cancellation permissions, and calendar exports. They do not load your `.env` or connect to Discord.
+
+For a local preview with sample sessions, run `node tests/support.cjs` after building and open the printed localhost URL. This fixture uses a separate temporary database; Discord login is intentionally disabled.
+
 ---
 
 ## Stack
@@ -140,7 +176,7 @@ Open `http://localhost:3000`.
 - **discord.js**
 - **Passport Discord OAuth**
 - **Tailwind CSS**
-- **Docker** (multi-stage Alpine image)
+- **Docker** (multi-stage Debian Bookworm image)
 
 ---
 
@@ -150,6 +186,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.7.0** | Gaming lobby redesign, new branding, agenda/search/filters, calendar downloads, and timezone-aware scheduling |
 | **1.6.0** | Migrated game search and artwork integration to IGDB |
 | **1.5.1** | Docker build fix + migration recovery guidance |
 | **1.5.0** | Branding, MIT license, docs polish |
@@ -159,7 +196,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Always pull `ghcr.io/mckenna654/freetoplay:latest` or `:v1.5.1`.  
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.7.0`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---

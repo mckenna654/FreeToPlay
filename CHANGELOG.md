@@ -5,6 +5,27 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.7.0] — 2026-10-14
+
+### Added
+- Calendar/agenda switch, session search, open-spots and my-sessions filters.
+- Session calendar downloads (.ics), copyable invite links, and date shortcuts from the calendar.
+- Guided session form with live preview, keyboard-accessible IGDB suggestions, and preserved input on validation errors.
+- Integration tests using an isolated SQLite database.
+
+### Changed
+- Redesigned the dashboard, event details, and scheduling flow as a co-op gaming lobby with original sci-fi artwork, dark surfaces, violet/lime accents, and bold game-menu typography.
+- Mobile navigation now includes hosting and personal sessions; phones default to the agenda view.
+- New controller logo, matching Discord thumbnail and browser icon, and updated desktop/mobile screenshots in the README.
+
+### Fixed
+- Session start times now preserve the browser's selected instant across server timezones.
+- Creating a session and reserving its host's spot is atomic.
+- Game suggestions render as text instead of injecting HTML.
+- Corrected asset and template paths when running the TypeScript development server.
+
+---
+
 ## [1.6.1] — 2026-07-31
 
 ### Added

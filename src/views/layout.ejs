@@ -3,104 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreeToPlay</title>
+    <meta name="theme-color" content="#0c0d13">
+    <title><%= currentPath === '/sessions/new' ? 'Host a session' : typeof session !== 'undefined' ? session.title : 'The lobby' %> · FreeToPlay</title>
     <link href="/styles.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <script src="/app.js" defer></script>
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans min-h-screen flex flex-col md:flex-row overflow-hidden">
-    
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen overflow-y-auto hidden md:flex">
-        <div class="px-5 pt-6 pb-4">
-            <a href="/" class="flex items-center justify-center rounded-xl overflow-hidden">
-                <img src="/small-logo.png?v=2" alt="FreeToPlay" class="w-full max-w-[200px] h-auto object-contain">
-            </a>
+<body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <aside class="sidebar">
+        <a href="/" class="brand" aria-label="FreeToPlay home"><span class="brand-mark" aria-hidden="true"><%- include('partials/controller') %></span><span>FREE<span class="brand-to">TO</span>PLAY<small>YOUR NEXT SESSION STARTS HERE</small></span></a>
+        <div class="sidebar-middle">
+            <p class="eyebrow">PLAYER MENU</p>
+            <nav aria-label="Main navigation">
+                <a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><span aria-hidden="true">▦</span> The lobby <span class="nav-arrow" aria-hidden="true">↗</span></a>
+                <% if (user) { %><a href="/?filter=mine&view=agenda" class="nav-link"><span aria-hidden="true">◎</span> My sessions</a><% } %>
+                <a href="/sessions/new" class="nav-link <%= currentPath === '/sessions/new' ? 'active' : '' %>"><span aria-hidden="true">＋</span> Host a session</a>
+            </nav>
+            <div class="club-note"><span class="eyebrow">BETTER IN CO-OP</span><span class="club-controller" aria-hidden="true"><%- include('partials/controller') %></span><p>NO SOLO<br><span>QUEUE.</span></p><small>Your people. Your games.<br>One more round.</small></div>
+            <% if (typeof activeMembers !== 'undefined' && activeMembers.length) { %>
+                <section class="members"><p class="eyebrow">THE SQUAD</p><div class="avatar-stack"><% activeMembers.forEach(m => { %><span class="avatar" title="<%= m.username %>"><% if (m.avatar) { %><img src="<%= m.avatar %>" alt="<%= m.username %>"><% } else { %><%= m.username.slice(0, 1).toUpperCase() %><% } %></span><% }) %></div><small>Players in your crew</small></section>
+            <% } %>
         </div>
-
-        <% if (user) { %>
-            <div class="px-6 pb-6">
-                <a href="/sessions/new" class="block w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
-                    + New Session
-                </a>
-            </div>
-        <% } %>
-
-        <nav class="flex-1 px-4 space-y-8">
-            <% if (typeof upcomingSessions !== 'undefined') { %>
-            <div>
-                <h3 class="px-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Upcoming</h3>
-                <div class="space-y-1">
-                    <% upcomingSessions.forEach(s => { %>
-                        <a href="/sessions/<%= s.id %>" class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors group">
-                            <% 
-                                let sidebarCover = s.gameCoverUrl;
-                                if (sidebarCover && sidebarCover.includes('t_cover_big')) {
-                                    sidebarCover = sidebarCover.replace('t_cover_big', 't_1080p');
-                                }
-                            %>
-                            <% if(sidebarCover) { %>
-                                <img src="<%= sidebarCover %>" class="w-8 h-6 rounded object-cover opacity-80 group-hover:opacity-100">
-                            <% } else { %>
-                                <div class="w-6 h-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">🎮</div>
-                            <% } %>
-                            <div class="overflow-hidden">
-                                <p class="text-sm font-medium text-slate-300 truncate"><%= s.title %></p>
-                                <p class="text-xs text-slate-500 truncate"><%= format(new Date(s.startTime), 'EEE, MMM d @ h:mm a') %></p>
-                            </div>
-                        </a>
-                    <% }) %>
-                </div>
-            </div>
-            <% } %>
-
-            <% if (typeof activeMembers !== 'undefined') { %>
-            <div>
-                <h3 class="px-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Active Members</h3>
-                <div class="flex flex-wrap gap-2 px-2">
-                    <% activeMembers.forEach(m => { %>
-                        <% if(m.avatar) { %>
-                            <img src="<%= m.avatar %>" title="<%= m.username %>" class="w-8 h-8 rounded-full border border-slate-700 hover:border-emerald-500 transition-colors cursor-pointer">
-                        <% } %>
-                    <% }) %>
-                </div>
-            </div>
-            <% } %>
-        </nav>
-
-        <div class="p-4 border-t border-slate-800">
-            <% if (user) { %>
-                <div class="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <% if (user.avatar) { %>
-                            <img src="<%= user.avatar %>" alt="avatar" class="w-9 h-9 rounded-full border border-slate-700">
-                        <% } %>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-200"><%= user.username %></span>
-                            <a href="/logout" class="text-xs text-slate-500 hover:text-rose-400 transition-colors">Logout</a>
-                        </div>
-                    </div>
-                </div>
-            <% } else { %>
-                <a href="/auth/discord" class="flex items-center justify-center gap-2 w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-2.5 px-4 rounded-xl transition-colors">
-                    Login with Discord
-                </a>
-            <% } %>
+        <div class="account">
+            <% if (user) { %><span class="avatar"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= user.username.slice(0, 1).toUpperCase() %><% } %></span><div><strong><%= user.username %></strong><a href="/logout">Sign out</a></div>
+            <% } else { %><a href="/auth/discord" class="button button-discord">Connect Discord <span aria-hidden="true">↗</span></a><small>Sign in to host or join a session.</small><% } %>
         </div>
     </aside>
-
-    <!-- Mobile Header -->
-    <header class="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 flex justify-between items-center">
-        <a href="/" class="flex items-center">
-            <img src="/small-logo.png?v=2" alt="FreeToPlay" class="h-12 w-auto max-w-[160px] object-contain">
-        </a>
-        <% if (!user) { %>
-            <a href="/auth/discord" class="text-xs bg-[#5865F2] px-3 py-1.5 rounded-lg font-bold">Login</a>
-        <% } %>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-1 h-screen overflow-y-auto bg-slate-950">
+    <main id="main" tabindex="-1">
+        <div class="topbar"><span><span class="topbar-slash">//</span> MULTIPLAYER STARTS HERE</span><span class="topbar-right"><span class="signal-dot"></span> SQUAD HQ</span></div>
+        <% if (error) { %><div class="notice error" role="alert"><%= error %></div><% } %>
         <%- body %>
+        <footer class="site-footer"><span>FreeToPlay <span aria-hidden="true">/</span> Good games. Zero scheduling chaos.</span><span>Game discovery by IGDB</span></footer>
     </main>
-
+    <div id="toast" class="toast" role="status" hidden></div>
 </body>
 </html>

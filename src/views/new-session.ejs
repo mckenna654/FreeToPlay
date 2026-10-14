@@ -1,115 +1,14 @@
-<div class="max-w-2xl mx-auto p-6 md:p-10">
-    <div class="bg-slate-900 rounded-2xl p-8 shadow-2xl border border-slate-800">
-        <h1 class="text-3xl font-black mb-8 text-emerald-400 tracking-tight">Schedule Session</h1>
-        
-        <form action="/sessions" method="POST" class="space-y-6">
-            <div>
-                <label for="title" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Event Title</label>
-                <input type="text" id="title" name="title" required placeholder="e.g. Friday Bug Hunt!" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
-            </div>
-
-            <div class="relative">
-                <label for="gameTitle" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Game Name</label>
-                <input type="text" id="gameTitle" name="gameTitle" required autocomplete="off" placeholder="e.g. Helldivers 2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
-                <input type="hidden" id="imageUrl" name="imageUrl">
-                
-                <!-- Autocomplete Dropdown -->
-                <div id="autocomplete-results" class="absolute z-10 w-full bg-slate-800 border border-slate-700 rounded-xl mt-2 hidden max-h-60 overflow-y-auto shadow-2xl overflow-hidden">
-                    <!-- Results will be injected here via JavaScript -->
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-4">
-                <div class="col-span-1">
-                    <label for="maxPlayers" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Max Players</label>
-                    <input type="number" id="maxPlayers" name="maxPlayers" required min="1" max="100" value="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
-                </div>
-                <div class="col-span-1">
-                    <label for="date" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
-                    <input type="date" id="date" name="date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors [&::-webkit-calendar-picker-indicator]:invert">
-                </div>
-                <div class="col-span-1">
-                    <label for="time" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Time (Local)</label>
-                    <input type="time" id="time" name="time" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors [&::-webkit-calendar-picker-indicator]:invert">
-                </div>
-            </div>
-
-            <div>
-                <label for="description" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Details & Notes</label>
-                <textarea id="description" name="description" rows="4" required placeholder="Let the squad know the plan..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"></textarea>
-            </div>
-
-            <div class="pt-6 flex justify-end gap-3 border-t border-slate-800">
-                <a href="/" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-xl transition-colors">Cancel</a>
-                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] font-bold py-3 px-8 rounded-xl transition-all">
-                    Create Event
-                </button>
-            </div>
-        </form>
-    </div>
+<div class="page form-page">
+    <a class="back-link" href="/">← Back to the lobby</a>
+    <header class="page-heading"><div><p class="eyebrow">CREATE A SESSION</p><h1>ASSEMBLE THE SQUAD<span class="accent">.</span></h1><p class="intro">Pick your game. Set the time. Rally your crew.</p></div></header>
+    <div class="form-layout"><form action="/sessions" method="POST" id="session-form" class="session-form">
+        <% if (errors.length) { %><div class="notice error" role="alert"><strong>Let’s fix a few things.</strong><ul><% errors.forEach(message => { %><li><%= message %></li><% }) %></ul></div><% } %>
+        <section class="form-section"><div class="form-section-title"><span>01</span><h2>What are we playing?</h2></div>
+            <div class="field game-field"><label for="gameTitle">Game <span>IGDB search or enter your own</span></label><input type="text" id="gameTitle" name="gameTitle" maxlength="150" required autocomplete="off" value="<%= values.gameTitle || '' %>" placeholder="Start with a game, e.g. Helldivers 2" aria-controls="autocomplete-results" aria-expanded="false" aria-autocomplete="list" role="combobox"><input type="hidden" id="imageUrl" name="imageUrl" value="<%= values.imageUrl || '' %>"><div id="autocomplete-results" class="autocomplete" role="listbox" aria-label="Game suggestions" hidden></div><p id="game-search-status" class="field-hint" role="status">Type at least 3 letters for game suggestions. Manual names work too.</p></div>
+            <div class="field"><label for="title">Session name</label><input type="text" id="title" name="title" maxlength="100" required value="<%= values.title || '' %>" placeholder="Friday night bug hunt"><p class="field-hint">Give it a name your friends will recognize.</p></div>
+        </section>
+        <section class="form-section"><div class="form-section-title"><span>02</span><h2>When & who?</h2></div><div class="field-grid"><div class="field"><label for="date">Date</label><input type="date" id="date" name="date" required value="<%= values.date || '' %>"></div><div class="field"><label for="time">Start time</label><input type="time" id="time" name="time" required value="<%= values.time || '20:00' %>"></div><div class="field"><label for="maxPlayers">Players</label><input type="number" id="maxPlayers" name="maxPlayers" min="1" max="100" required value="<%= values.maxPlayers || 4 %>"></div></div><p class="field-hint" id="timezone-hint">Without JavaScript, times use <%= timeZone.replace(/_/g, ' ') %>.</p><input type="hidden" name="startTimeIso" id="startTimeIso"><p class="field-hint">Player count includes you. Your spot is saved automatically.</p></section>
+        <section class="form-section"><div class="form-section-title"><span>03</span><h2>The plan <small>Optional</small></h2></div><div class="field"><label class="sr-only" for="description">Details and notes</label><textarea id="description" name="description" maxlength="2000" rows="4" placeholder="Casual runs? Ranked grind? Let everyone know what to expect, where to meet, or what to bring."><%= values.description || '' %></textarea></div></section>
+        <div class="form-actions"><a href="/" class="text-link">Cancel</a><button type="submit" class="button button-primary">Create session <span aria-hidden="true">↗</span></button></div>
+    </form><aside class="session-preview"><p class="eyebrow">LOBBY PREVIEW</p><div class="preview-art art-fallback"><span class="fallback-controller" aria-hidden="true"><%- include('partials/controller') %></span><img id="preview-image" <% if (values.imageUrl) { %>src="<%= values.imageUrl %>"<% } else { %>hidden<% } %> alt="Selected game artwork"></div><div class="preview-body"><span class="eyebrow" id="preview-game">Pick your game</span><h2 id="preview-title">Your next adventure.</h2><p id="preview-time">A time that works for your group.</p><hr><p><strong id="preview-players">4</strong> player slots<br><span class="muted">One already reserved for you.</span></p></div><div class="preview-note"><span aria-hidden="true">↗</span><p>Your session will appear in the lobby. If the Discord bot is connected, your group gets an invite there too.</p></div></aside></div>
 </div>
-
-<script>
-    const gameInput = document.getElementById('gameTitle');
-    const imageUrlInput = document.getElementById('imageUrl');
-    const resultsContainer = document.getElementById('autocomplete-results');
-    let debounceTimer;
-
-    gameInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimer);
-        const query = e.target.value.trim();
-        
-        // Reset image if user types something new
-        imageUrlInput.value = '';
-
-        if (query.length < 3) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
-
-        debounceTimer = setTimeout(async () => {
-            // Show loading state
-            resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">Searching IGDB...</div>';
-            resultsContainer.classList.remove('hidden');
-
-            try {
-                const response = await fetch(`/api/games/search?q=${encodeURIComponent(query)}`);
-                
-                if (!response.ok) {
-                    throw new Error('API Error');
-                }
-
-                const games = await response.json();
-                
-                if (games.length > 0) {
-                    resultsContainer.innerHTML = games.map(game => `
-                        <div class="flex items-center gap-4 p-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0 transition-colors" 
-                             onclick="selectGame('${game.name.replace(/'/g, "\\'")}', '${game.background_image || ''}')">
-                            ${game.background_image ? `<img src="${game.background_image}" class="w-10 h-10 object-cover rounded-md shadow">` : `<div class="w-10 h-10 bg-slate-900 rounded-md border border-slate-700 flex items-center justify-center text-xs text-slate-500">No img</div>`}
-                            <span class="text-slate-200 font-bold text-sm">${game.name}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">No games found or IGDB keys missing.</div>';
-                }
-            } catch (err) {
-                console.error(err);
-                resultsContainer.innerHTML = '<div class="p-4 text-center text-rose-400 text-sm">Error connecting to game database.</div>';
-            }
-        }, 500);
-    });
-
-    // Hide dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!gameInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
-
-    // Select game function
-    window.selectGame = (name, imageUrl) => {
-        gameInput.value = name;
-        imageUrlInput.value = imageUrl;
-        resultsContainer.classList.add('hidden');
-    };
-</script>

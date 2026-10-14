@@ -8,6 +8,7 @@ import prisma from './prisma';
 import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import dns from 'dns';
+import { coverUrl, sessionCalendar, validateSession } from './session-utils';
 
 // Force IPv4 DNS resolution for fetch/axios to fix ENOTFOUND errors
 dns.setDefaultResultOrder('ipv4first');
@@ -19,12 +20,13 @@ const app = express();
 app.use(expressLayouts);
 app.set('layout', 'layout');
 app.set('view engine', 'ejs');
-app.set('views', path.resolve(__dirname, '../../src/views'));
+const projectRoot = path.resolve(__dirname, path.basename(path.dirname(__dirname)) === 'dist' ? '../..' : '..');
+app.set('views', path.join(projectRoot, 'src/views'));
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.resolve(__dirname, '../../public')));
+app.use(express.static(path.join(projectRoot, 'public')));
 
 app.set('trust proxy', 1);
 
@@ -86,6 +88,11 @@ app.use(passport.session());
 // Pass user to views
 app.use((req, res, next) => {
     res.locals.user = req.user;
+    res.locals.currentPath = req.path;
+    res.locals.coverUrl = coverUrl;
+    res.locals.format = format;
+    res.locals.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    res.locals.error = typeof req.query.error === 'string' ? 'Something went wrong. Please try again.' : null;
     next();
 });
 
@@ -171,7 +178,7 @@ app.get('/', async (req, res) => {
     // Determine Target Month
     const monthQuery = req.query.month as string;
     let targetDate = new Date();
-    if (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery)) {
+    if (typeof monthQuery === 'string' && /^(19|20|21)\d{2}-(0[1-9]|1[0-2])$/.test(monthQuery)) {
         const [year, month] = monthQuery.split('-');
         targetDate = new Date(parseInt(year), parseInt(month) - 1, 1);
     }
@@ -207,7 +214,8 @@ app.get('/', async (req, res) => {
     const upcomingSessions = await prisma.gameSession.findMany({
         where: { startTime: { gte: today } },
         orderBy: { startTime: 'asc' },
-        take: 5
+        take: 3,
+        include: { creator: true, rsvps: true }
     });
 
     // Recent Members widget data
@@ -216,8 +224,24 @@ app.get('/', async (req, res) => {
         orderBy: { id: 'desc' }
     });
 
+    const query = typeof req.query.q === 'string' ? req.query.q.slice(0, 100).trim() : '';
+    const filter = req.query.filter === 'open' ? 'open' : req.query.filter === 'mine' && req.user ? 'mine' : 'all';
+    const view = req.query.view === 'agenda' ? 'agenda' : req.query.view === 'calendar' ? 'calendar' : 'auto';
+    const filteredSessions = sessions.filter(s => {
+        const matchesSearch = `${s.title} ${s.gameTitle} ${s.creator.username}`.toLowerCase().includes(query.toLowerCase());
+        const matchesFilter = filter === 'open' ? s.startTime > today && s.rsvps.filter(r => r.status === 'CONFIRMED').length < s.maxPlayers
+            : filter === 'mine' ? s.creatorId === (req.user as any).id || s.rsvps.some(r => r.userId === (req.user as any).id && r.status !== 'DECLINED') : true;
+        return matchesSearch && matchesFilter;
+    });
+    const monthSessions = filteredSessions.filter(s => isSameMonth(s.startTime, monthStart));
+    const link = (changes: Record<string, string>) => {
+        const params = new URLSearchParams({ month: format(monthStart, 'yyyy-MM'), q: query, filter, ...(view !== 'auto' ? { view } : {}), ...changes });
+        return `/?${params}`;
+    };
     res.render('index', {
-        sessions,
+        sessions: filteredSessions,
+        monthSessions, query, filter, view, link,
+        monthCount: sessions.filter(s => isSameMonth(s.startTime, monthStart)).length,
         upcomingSessions,
         activeMembers,
         calendarDays,
@@ -247,14 +271,16 @@ app.get('/logout', (req, res, next) => {
 // Create Session
 app.get('/sessions/new', (req, res) => {
     if (!req.user) return res.redirect('/auth/discord');
-    res.render('new-session');
+    const date = typeof req.query.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date) ? req.query.date : '';
+    res.render('new-session', { values: { date }, errors: [] });
 });
 
 app.post('/sessions', async (req, res) => {
     if (!req.user) return res.redirect('/auth/discord');
 
-    const { gameTitle, imageUrl, title, description, maxPlayers, date, time } = req.body;
-    const startTime = new Date(`${date}T${time}`);
+    const { values, startTime, maxPlayers, errors } = validateSession(req.body);
+    if (errors.length) return res.status(400).render('new-session', { values, errors });
+    const { gameTitle, imageUrl, title, description } = values;
     const user = req.user as any;
 
     try {
@@ -264,18 +290,10 @@ app.post('/sessions', async (req, res) => {
                 gameCoverUrl: imageUrl || null,
                 title,
                 description,
-                maxPlayers: parseInt(maxPlayers) || 4,
+                maxPlayers,
                 startTime,
-                creatorId: user.id
-            }
-        });
-
-        // Add creator as CONFIRMED
-        await prisma.rSVP.create({
-            data: {
-                sessionId: session.id,
-                userId: user.id,
-                status: 'CONFIRMED'
+                creatorId: user.id,
+                rsvps: { create: { userId: user.id, status: 'CONFIRMED' } }
             }
         });
 
@@ -305,8 +323,15 @@ app.post('/sessions', async (req, res) => {
         res.redirect(`/sessions/${session.id}`);
     } catch (error) {
         console.error(error);
-        res.redirect('/sessions/new?error=failed');
+        res.status(500).render('new-session', { values, errors: ['Your session could not be saved. Please try again.'] });
     }
+});
+
+app.get('/sessions/:id/calendar.ics', async (req, res) => {
+    const session = await prisma.gameSession.findUnique({ where: { id: req.params.id } });
+    if (!session) return res.status(404).send('Session not found');
+    res.setHeader('Content-Disposition', 'attachment; filename="freetoplay-session.ics"');
+    res.type('text/calendar').send(sessionCalendar(session, process.env.BASE_URL || 'http://localhost:3000'));
 });
 
 // View Session Details

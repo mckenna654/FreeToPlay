@@ -1,78 +1,34 @@
-<div class="p-6 md:p-10 max-w-7xl mx-auto">
-    <div class="flex justify-between items-end mb-8">
-        <div>
-            <div class="flex items-center gap-4">
-                <a href="/?month=<%= prevMonth %>" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                </a>
-                <h1 class="text-3xl font-black text-slate-100 min-w-[220px] text-center"><%= format(monthStart, 'MMMM yyyy') %></h1>
-                <a href="/?month=<%= nextMonth %>" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                </a>
-            </div>
-            <p class="text-slate-400 mt-2">Schedule and join upcoming game sessions</p>
+<div class="page board-page">
+    <header class="page-heading lobby-hero">
+        <div class="hero-content">
+            <p class="eyebrow"><span class="signal-dot"></span> YOUR PARTY STARTS HERE</p>
+            <h1>SQUAD UP.<br><span class="accent">GAME ON.</span></h1>
+            <p class="intro">Less planning. More playing.<br>Get the crew together for your next session.</p>
+            <a href="/sessions/new" class="button button-primary">Host a session <span aria-hidden="true">＋</span></a>
         </div>
-    </div>
-
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-        <!-- Days of Week Header -->
-        <div class="grid grid-cols-7 border-b border-slate-800 bg-slate-900/50">
-            <% ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => { %>
-                <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    <%= day %>
-                </div>
-            <% }) %>
+        <span class="hero-stamp" aria-hidden="true">FREE TO PLAY / BUILT FOR CO-OP</span>
+    </header>
+    <section class="up-next" aria-labelledby="next-heading">
+        <div class="section-heading"><h2 id="next-heading">NEXT IN THE QUEUE</h2><span class="eyebrow">PICK YOUR NEXT SESSION</span></div>
+        <% if (upcomingSessions.length) { %>
+        <div class="upcoming-grid"><% upcomingSessions.forEach((s, i) => { const count = s.rsvps.filter(r => r.status === 'CONFIRMED').length; const spots = Math.max(0, s.maxPlayers - count); const cover = coverUrl(s.gameCoverUrl); %>
+            <a href="/sessions/<%= s.id %>" class="session-ticket">
+                <div class="ticket-art <%= cover ? '' : 'art-fallback' %>"><% if (cover) { %><img src="<%= cover %>" alt="" loading="lazy"><% } else { %><span class="fallback-controller" aria-hidden="true"><%- include('partials/controller') %></span><% } %><span class="ticket-number">0<%= i + 1 %> / NEXT UP</span><span class="ticket-game"><%= s.gameTitle %></span></div>
+                <div class="ticket-body"><div class="ticket-date"><time data-local-month datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'MMM') %></time><strong><time data-local-day datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'dd') %></time></strong></div><div class="ticket-info"><span class="ticket-mobile-game"><%= s.gameTitle %></span><h3><%= s.title %></h3><p><time data-local-time datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'EEE, h:mm a') %></time></p><span class="availability <%= spots ? '' : 'full' %>"><span aria-hidden="true">●</span> <%= spots ? spots + ' spot' + (spots === 1 ? '' : 's') + ' open' : 'Full house' %></span></div><span class="ticket-arrow" aria-hidden="true">↗</span></div>
+            </a>
+        <% }) %></div>
+        <% } else { %><div class="empty-horizon"><span class="empty-controller" aria-hidden="true"><%- include('partials/controller') %></span><div><h3>The lobby is waiting on you.</h3><p>No upcoming sessions yet. Pick a game and give everyone a reason to show up.</p></div><a href="/sessions/new" class="text-link">Create the first session <span aria-hidden="true">↗</span></a></div><% } %>
+    </section>
+    <section class="schedule" aria-labelledby="schedule-heading">
+        <div class="schedule-heading"><div class="month-navigation"><h2 id="schedule-heading"><%= format(monthStart, 'MMMM') %> <span><%= format(monthStart, 'yyyy') %></span></h2><div class="month-arrows"><a href="<%= link({ month: prevMonth }) %>" class="icon-button" aria-label="Previous month">←</a><a href="<%= link({ month: nextMonth }) %>" class="icon-button" aria-label="Next month">→</a></div><a href="<%= link({ month: format(new Date(), 'yyyy-MM') }) %>" class="today-link">Today</a></div><div class="view-switch" aria-label="Schedule view"><a href="<%= link({ view: 'calendar' }) %>" class="<%= view !== 'agenda' ? 'selected' : '' %>" data-view="calendar">▦ Calendar</a><a href="<%= link({ view: 'agenda' }) %>" class="<%= view === 'agenda' ? 'selected' : '' %>" data-view="agenda">☰ Agenda</a></div></div>
+        <div class="schedule-toolbar"><div class="filters" aria-label="Filter sessions"><a href="<%= link({ filter: 'all' }) %>" class="<%= filter === 'all' ? 'selected' : '' %>" <%- filter === 'all' ? 'aria-current="true"' : '' %>>All sessions <span><%= monthCount %></span></a><a href="<%= link({ filter: 'open' }) %>" class="<%= filter === 'open' ? 'selected' : '' %>" <%- filter === 'open' ? 'aria-current="true"' : '' %>>Open spots</a><% if (user) { %><a href="<%= link({ filter: 'mine' }) %>" class="<%= filter === 'mine' ? 'selected' : '' %>" <%- filter === 'mine' ? 'aria-current="true"' : '' %>>My sessions</a><% } %></div><form action="/" method="GET" class="search-form"><input type="hidden" name="month" value="<%= format(monthStart, 'yyyy-MM') %>"><input type="hidden" name="filter" value="<%= filter %>"><% if (view !== 'auto') { %><input type="hidden" name="view" value="<%= view %>"><% } %><label class="sr-only" for="session-search">Search sessions, games or hosts</label><input id="session-search" name="q" type="search" value="<%= query %>" placeholder="Find a game or session…"><button aria-label="Search sessions" type="submit">↵</button></form></div>
+        <div class="schedule-content view-<%= view %>">
+            <div class="calendar-scroll" role="region" aria-label="Monthly calendar" tabindex="0"><div class="calendar"><div class="weekdays"><% ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => { %><span><%= day %></span><% }) %></div><div class="calendar-days"><% calendarDays.forEach(day => { const current = isSameMonth(day, monthStart); const today = isToday(day); const daySessions = sessions.filter(s => format(s.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')); %>
+                <div class="calendar-day <%= !current ? 'outside-month' : '' %> <%= today ? 'is-today' : '' %>"><div class="day-heading"><span class="day-number"><%= format(day, 'd') %></span><% if (user) { %><a class="day-add" href="/sessions/new?date=<%= format(day, 'yyyy-MM-dd') %>" aria-label="Host a session on <%= format(day, 'MMMM d') %>">+</a><% } %></div><% daySessions.forEach(s => { const count = s.rsvps.filter(r => r.status === 'CONFIRMED').length; %><a href="/sessions/<%= s.id %>" class="calendar-event <%= s.startTime < new Date() ? 'past-event' : '' %>"><span class="event-time"><%= format(s.startTime, 'h:mm a') %></span><strong><%= s.title %></strong><span class="event-game"><%= s.gameTitle %></span><span class="event-slots"><%= count %>/<%= s.maxPlayers %> going</span></a><% }) %></div>
+            <% }) %></div></div></div>
+            <div class="agenda"><% monthSessions.forEach(s => { const count = s.rsvps.filter(r => r.status === 'CONFIRMED').length; const spots = Math.max(0, s.maxPlayers - count); const mine = user && s.rsvps.find(r => r.userId === user.id); %><a class="agenda-row" href="/sessions/<%= s.id %>"><div class="agenda-date"><time data-local-weekday datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'EEE') %></time><strong><time data-local-day datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'dd') %></time></strong></div><div class="agenda-main"><span class="eyebrow"><%= s.gameTitle %></span><h3><%= s.title %></h3><p><time data-local-time datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'h:mm a') %></time> · Hosted by <%= s.creator.username %></p></div><div class="agenda-status"><span class="availability <%= spots ? '' : 'full' %>"><%= s.startTime < new Date() ? 'Past session' : spots ? spots + ' spots open' : 'Full house' %></span><% if (mine) { %><small><%= mine.status === 'CONFIRMED' ? 'You’re going' : mine.status === 'TENTATIVE' ? 'You’re tentative' : 'You declined' %></small><% } %></div><span class="row-arrow" aria-hidden="true">↗</span></a><% }) %></div>
         </div>
-
-        <!-- Calendar Grid -->
-        <div class="grid grid-cols-7 bg-slate-800 gap-[1px]">
-            <% calendarDays.forEach(day => { %>
-                <% 
-                    const isCurrentMonth = isSameMonth(day, monthStart);
-                    const today = isToday(day);
-                    // Find sessions for this day
-                    const daySessions = sessions.filter(s => {
-                        const sDate = new Date(s.startTime);
-                        return sDate.getDate() === day.getDate() && 
-                               sDate.getMonth() === day.getMonth() && 
-                               sDate.getFullYear() === day.getFullYear();
-                    });
-                %>
-                
-                <div class="min-h-[120px] bg-slate-900 p-2 <%= !isCurrentMonth ? 'opacity-40' : '' %> <%= today ? 'bg-slate-800/50' : '' %> transition-colors hover:bg-slate-800/80">
-                    <div class="flex justify-between items-start">
-                        <span class="text-sm font-semibold <%= today ? 'bg-emerald-500 text-slate-950 w-6 h-6 flex items-center justify-center rounded-full' : 'text-slate-400' %>">
-                            <%= format(day, 'd') %>
-                        </span>
-                    </div>
-
-                    <div class="mt-2 space-y-1.5">
-                        <% daySessions.forEach(s => { %>
-                            <% 
-                                let calendarCover = s.gameCoverUrl;
-                                if (calendarCover && calendarCover.includes('t_cover_big')) {
-                                    calendarCover = calendarCover.replace('t_cover_big', 't_1080p');
-                                }
-                            %>
-                            <a href="/sessions/<%= s.id %>" class="block relative overflow-hidden rounded-md group border border-slate-700 hover:border-emerald-500/50 transition-colors">
-                                <% if(calendarCover) { %>
-                                    <div class="absolute inset-0 opacity-40 group-hover:opacity-50 transition-opacity">
-                                        <img src="<%= calendarCover %>" class="w-full h-full object-cover object-center">
-                                    </div>
-                                <% } %>
-                                <div class="relative p-1.5 z-10">
-                                    <div class="text-[10px] font-bold text-emerald-400 mb-0.5">
-                                        <%= format(new Date(s.startTime), 'h:mm a') %>
-                                    </div>
-                                    <div class="text-xs font-medium text-slate-200 truncate leading-tight">
-                                        <%= s.title %>
-                                    </div>
-                                </div>
-                            </a>
-                        <% }) %>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-    </div>
+        <% if (!monthSessions.length) { %><div class="schedule-empty"><h3><%= query || filter !== 'all' ? 'No sessions match just yet.' : 'No missions on the calendar.' %></h3><p><%= query || filter !== 'all' ? 'Try another search or clear your filters.' : 'Nothing planned this month. Host a session and get the group together.' %></p><a class="text-link" href="<%= query || filter !== 'all' ? link({ q: '', filter: 'all' }) : '/sessions/new' %>"><%= query || filter !== 'all' ? 'Clear filters' : 'Host the first session' %> ↗</a></div><% } %>
+        <div class="calendar-caption"><span><span class="signal-dot"></span> Today <span class="caption-separator">/</span> Calendar dates & times: <%= timeZone.replace(/_/g, ' ') %></span><span><%= monthSessions.length %> session<%= monthSessions.length === 1 ? '' : 's' %> this month</span></div>
+    </section>
 </div>
