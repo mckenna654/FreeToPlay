@@ -23,6 +23,7 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 - Creating a session and reserving its host's spot is atomic.
 - Game suggestions render as text instead of injecting HTML.
 - Corrected asset and template paths when running the TypeScript development server.
+- Updated Docker build and runtime stages to Node 24 to support the current SQLite and Prisma dependencies; documented the matching local development requirement.
 
 ---
 

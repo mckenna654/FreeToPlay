@@ -150,6 +150,8 @@ FreeToPlay uses Twitch's IGDB to power game search and cover art.
 
 ## Local development
 
+Use Node.js 24 or newer (`nvm use` selects Node 24). The Docker image also uses Node 24 to support the current SQLite and Prisma dependencies.
+
 ```bash
 git clone https://github.com/mckenna654/FreeToPlay.git
 cd FreeToPlay
