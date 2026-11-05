@@ -1,5 +1,7 @@
 import { Client, GatewayIntentBits, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Interaction } from 'discord.js';
 import prisma from './prisma';
+import { saveRsvp } from './rsvp';
+import { coverUrl } from './session-utils';
 
 export const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -22,13 +24,13 @@ const startCleanupCron = () => {
 
             if (expiredSessions.length === 0) return;
 
-            const channelId = process.env.DISCORD_CHANNEL_ID;
-            if (!channelId) return;
-
-            const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null;
-            if (!channel) return;
-
             for (const session of expiredSessions) {
+                // Use the channel the post went to, in case the configured channel has changed since
+                const channelId = session.discordChannelId || process.env.DISCORD_CHANNEL_ID;
+                if (!channelId) continue;
+                const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null;
+                if (!channel) continue;
+
                 // 1. Delete original active message (with buttons)
                 if (session.discordMessageId) {
                     try {
@@ -61,7 +63,7 @@ const startCleanupCron = () => {
                         } catch (e) {
                             console.error('Could not delete session over message:', e);
                         }
-                    }, 2 * 60 * 60 * 1000);
+                    }, 2 * 60 * 60 * 1000).unref();
                 } catch (e) {
                     console.error('Could not send session over message:', e);
                 }
@@ -77,16 +79,20 @@ client.once('clientReady', () => {
     startCleanupCron();
 });
 
-// Handle Button Interactions
-client.on('interactionCreate', async (interaction: Interaction) => {
+// Without a listener, a Discord connection error would be thrown and end the whole process
+client.on('error', error => console.error('Discord client error:', error));
+
+// Handle Button Interactions. Discord calls can fail at any point, including the very first
+// reply, and a rejection escaping this handler would take the website down with the bot.
+export const handleInteraction = async (interaction: Interaction) => {
     if (!interaction.isButton()) return;
 
     const [action, sessionId] = interaction.customId.split('_');
     
     if (['confirm', 'tentative', 'decline'].includes(action)) {
-        await interaction.deferReply({ ephemeral: true });
-        
         try {
+            await interaction.deferReply({ ephemeral: true });
+
             const user = await prisma.user.upsert({
                 where: { id: interaction.user.id },
                 update: {
@@ -106,20 +112,15 @@ client.on('interactionCreate', async (interaction: Interaction) => {
                 'decline': 'DECLINED'
             };
 
-            await prisma.rSVP.upsert({
-                where: {
-                    sessionId_userId: {
-                        sessionId,
-                        userId: user.id
-                    }
-                },
-                update: { status: statusMap[action] },
-                create: {
-                    sessionId,
-                    userId: user.id,
-                    status: statusMap[action]
-                }
-            });
+            const result = await saveRsvp(sessionId, user.id, statusMap[action]);
+            if (result === 'full') {
+                await interaction.editReply('This session is full. You can still choose Tentative.');
+                return;
+            }
+            if (result === 'missing') {
+                await interaction.editReply('This session no longer exists.');
+                return;
+            }
 
             // Re-render and update the original Discord message
             await updateSessionDiscordMessage(sessionId);
@@ -138,10 +139,13 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 
         } catch (error) {
             console.error('RSVP Error:', error);
-            await interaction.editReply('❌ Failed to update your RSVP status.');
+            await interaction.editReply('❌ Failed to update your RSVP status.').catch(replyError => {
+                console.error('Could not tell the user their RSVP failed:', replyError);
+            });
         }
     }
-});
+};
+client.on('interactionCreate', handleInteraction);
 
 export const notifyNewSession = async (session: { id: string, gameTitle: string; gameCoverUrl?: string | null; title: string; description: string; startTime: Date; creatorName: string; maxPlayers: number }, channelId: string) => {
     try {
@@ -227,8 +231,9 @@ export const updateSessionDiscordMessage = async (sessionId: string) => {
                 { name: 'Host', value: session.creator.username, inline: true }
             );
 
-        if (session.gameCoverUrl) {
-            embed.setImage(session.gameCoverUrl);
+        const cover = coverUrl(session.gameCoverUrl);
+        if (cover) {
+            embed.setImage(cover);
         }
 
         const row = new ActionRowBuilder<ButtonBuilder>()
@@ -286,7 +291,7 @@ export const notifySessionCancelled = async (session: { title: string; gameTitle
                 } catch (e) {
                     console.error('Could not delete cancellation message:', e);
                 }
-            }, 2 * 60 * 60 * 1000);
+            }, 2 * 60 * 60 * 1000).unref();
         }
     } catch (error) {
         console.error('Failed to send cancellation notification:', error);

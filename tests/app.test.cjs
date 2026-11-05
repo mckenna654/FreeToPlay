@@ -110,3 +110,139 @@ test('the next session leads the lobby and the queue does not repeat it', async 
     assert.ok(!queue.includes('Friday night bug hunt'));
     assert.ok(queue.includes('One more round'));
 });
+
+const person = 'alex';
+const seatedSession = (id, maxPlayers, players) => fixture.prisma.gameSession.create({ data: {
+    id, title: id, gameTitle: 'Test game', description: '', maxPlayers, creatorId: person,
+    startTime: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3),
+    rsvps: { create: players.map(userId => ({ userId, status: 'CONFIRMED' })) }
+} });
+const rsvpOf = (sessionId, userId) => fixture.prisma.rSVP.findUnique({ where: { sessionId_userId: { sessionId, userId } } });
+
+test('requests from other sites cannot change anything', async () => {
+    await seatedSession('cross-site', 4, ['alex']);
+    const send = site => fetch(fixture.baseUrl + '/sessions/cross-site/delete', {
+        method: 'POST', redirect: 'manual',
+        headers: { 'x-test-user': 'alex', 'sec-fetch-site': site }
+    });
+    assert.equal((await send('cross-site')).status, 403);
+    assert.equal((await send('same-site')).status, 403);
+    assert.ok(await fixture.prisma.gameSession.findUnique({ where: { id: 'cross-site' } }));
+    assert.equal((await send('same-origin')).status, 302);
+    assert.equal(await fixture.prisma.gameSession.findUnique({ where: { id: 'cross-site' } }), null);
+});
+test('signing out needs a POST, so a link or image cannot do it', async () => {
+    assert.equal((await get('/logout', 'alex')).status, 404);
+    assert.equal((await post('/logout', {})).status, 302);
+    assert.ok((await (await get('/', 'alex')).text()).includes('action="/logout" method="POST"'));
+});
+test('a full session refuses another confirmed player but still takes a maybe', async () => {
+    await seatedSession('full-web', 2, ['alex', 'sam']);
+    const refused = await post('/sessions/full-web/rsvp', { status: 'CONFIRMED' }, 'jules');
+    assert.equal(refused.headers.get('location'), '/sessions/full-web?error=full');
+    assert.equal(await rsvpOf('full-web', 'jules'), null);
+    assert.ok((await (await get('/sessions/full-web?error=full', 'jules')).text()).includes('This session is full'));
+    assert.match(await (await get('/sessions/full-web', 'jules')).text(), /value="CONFIRMED"[^>]* disabled/);
+
+    await post('/sessions/full-web/rsvp', { status: 'TENTATIVE' }, 'jules');
+    assert.equal((await rsvpOf('full-web', 'jules')).status, 'TENTATIVE');
+    // Someone who already has a seat can confirm again, and giving a seat up frees it.
+    assert.ok((await post('/sessions/full-web/rsvp', { status: 'CONFIRMED' }, 'sam')).headers.get('location').endsWith('/sessions/full-web'));
+    await post('/sessions/full-web/rsvp', { status: 'DECLINED' }, 'sam');
+    await post('/sessions/full-web/rsvp', { status: 'CONFIRMED' }, 'jules');
+    assert.equal((await rsvpOf('full-web', 'jules')).status, 'CONFIRMED');
+});
+test('two people racing for the last seat cannot both get it', async () => {
+    const { saveRsvp } = require('../dist/src/rsvp');
+    await seatedSession('race', 2, ['alex']);
+    const results = await Promise.all(['sam', 'jules', 'morgan'].map(userId => saveRsvp('race', userId, 'CONFIRMED')));
+    assert.deepEqual([...results].sort(), ['full', 'full', 'saved']);
+    assert.equal(await fixture.prisma.rSVP.count({ where: { sessionId: 'race', status: 'CONFIRMED' } }), 2);
+});
+test('an RSVP with no form data does not crash, and a missing session is a 404', async () => {
+    const empty = await fetch(fixture.baseUrl + '/sessions/bug-hunt/rsvp', { method: 'POST', redirect: 'manual', headers: { 'x-test-user': 'alex' } });
+    assert.equal(empty.status, 302);
+    assert.equal((await post('/sessions/not-a-session/rsvp', { status: 'CONFIRMED' })).status, 404);
+});
+
+const buttonClick = (customId, userId, overrides = {}) => {
+    const replies = [];
+    return { replies, interaction: {
+        isButton: () => true, customId,
+        user: { id: userId, username: userId, avatar: null },
+        deferReply: async () => {},
+        editReply: async message => { replies.push(message); },
+        ...overrides
+    } };
+};
+test('a failed Discord reply cannot crash the app', async () => {
+    const { handleInteraction } = require('../dist/src/bot');
+    const log = console.error;
+    console.error = () => {};
+    try {
+        const failing = async () => { throw new Error('Unknown interaction'); };
+        // The first reply fails, then telling the user about it fails as well.
+        const { interaction } = buttonClick('confirm_bug-hunt', 'alex', { deferReply: failing, editReply: failing });
+        await assert.doesNotReject(handleInteraction(interaction));
+    } finally {
+        console.error = log;
+    }
+});
+test('Discord buttons respect the player limit and name a deleted session', async () => {
+    const { handleInteraction } = require('../dist/src/bot');
+    await seatedSession('full-bot', 1, ['alex']);
+    const full = buttonClick('confirm_full-bot', 'sam');
+    await handleInteraction(full.interaction);
+    assert.match(full.replies[0], /full/);
+    assert.equal(await rsvpOf('full-bot', 'sam'), null);
+
+    const maybe = buttonClick('tentative_full-bot', 'sam');
+    await handleInteraction(maybe.interaction);
+    assert.equal((await rsvpOf('full-bot', 'sam')).status, 'TENTATIVE');
+
+    const gone = buttonClick('confirm_not-a-session', 'sam');
+    await handleInteraction(gone.interaction);
+    assert.match(gone.replies[0], /no longer exists/);
+});
+test('cancelling deletes first, and tidies up the channel the post went to', async () => {
+    const { client } = require('../dist/src/bot');
+    await seatedSession('cancel-me', 4, ['alex']);
+    await fixture.prisma.gameSession.update({ where: { id: 'cancel-me' }, data: { discordChannelId: 'saved-channel', discordMessageId: 'post' } });
+    const fetchChannel = client.channels.fetch;
+    const seen = [];
+    client.channels.fetch = async id => {
+        seen.push({ id, stillSaved: !!(await fixture.prisma.gameSession.findUnique({ where: { id: 'cancel-me' } })) });
+        return { messages: { fetch: async () => ({ delete: async () => {} }) }, send: async () => ({ delete: async () => {} }) };
+    };
+    process.env.DISCORD_CHANNEL_ID = 'newer-channel';
+    try {
+        assert.equal((await post('/sessions/cancel-me/delete', {})).status, 302);
+    } finally {
+        client.channels.fetch = fetchChannel;
+        process.env.DISCORD_CHANNEL_ID = '';
+    }
+    assert.deepEqual(seen, [{ id: 'saved-channel', stillSaved: false }]);
+});
+test('a session outside the grid is still sent, so the browser can place it by local day', async () => {
+    const html = await (await get('/?month=' + fixture.month)).text();
+    assert.match(html, /class="calendar-day [^"]*" data-date="\d{4}-\d{2}-\d{2}"/);
+    assert.match(html, /class="calendar-event [^"]*" data-start="\d{4}-\d{2}-\d{2}T[^"]+Z"/);
+    const nextMonth = new Date(fixture.startTime); nextMonth.setDate(1); nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const first = new Date(nextMonth); first.setDate(first.getDate() - first.getDay());
+    await seatedSession('edge-of-grid', 4, ['alex']);
+    const dayBefore = new Date(first); dayBefore.setDate(dayBefore.getDate() - 1); dayBefore.setHours(23, 30, 0, 0);
+    await fixture.prisma.gameSession.update({ where: { id: 'edge-of-grid' }, data: { startTime: dayBefore } });
+    const month = nextMonth.getFullYear() + '-' + String(nextMonth.getMonth() + 1).padStart(2, '0');
+    const edge = await (await get('/?month=' + month)).text();
+    const extra = edge.split('<div class="calendar-extra" hidden>')[1].split('</div>')[0];
+    assert.ok(extra.includes('edge-of-grid'));
+    await fixture.prisma.gameSession.delete({ where: { id: 'edge-of-grid' } });
+});
+test('covers are only accepted from the IGDB image host', () => {
+    assert.equal(coverUrl('https://images.igdb.com/igdb/image/upload/t_1080p/abc.jpg'), 'https://images.igdb.com/igdb/image/upload/t_1080p/abc.jpg');
+    for (const url of ['https://evil.example/a.png', 'http://images.igdb.com/a.jpg', 'https://images.igdb.com.evil.example/a.jpg', 'https://evil.example/images.igdb.com/a.jpg']) {
+        assert.equal(coverUrl(url), null, url);
+    }
+    const { values } = validateSession({ imageUrl: 'https://evil.example/a.png' });
+    assert.equal(values.imageUrl, '');
+});

@@ -1,5 +1,27 @@
 # Handoff
 
+## 2026-11-05: Fixes from the full code review (v1.8.3, branch `claude/review-fixes`)
+
+**Changed**
+- Discord handler can't reject, the client has an `error` listener, and `src/index.ts` logs stray rejections.
+- `SameSite=Lax`, a `Sec-Fetch-Site` check on non-GET requests, POST `/logout`, and OAuth `state: true`.
+- `src/rsvp.ts` is now the only place RSVPs are saved, and it enforces `maxPlayers` in a transaction.
+- `public/app.js` moves calendar entries to the viewer's local day. The server query is padded by a day each side.
+- Cancelling deletes first and uses the saved channel. Cleanup also uses the saved channel.
+- `coverUrl` only accepts `https://images.igdb.com`. `prisma.config.ts` loads `.env`. A failed port bind exits with code 1.
+- Rewrote the failed migration message, which used to recommend deleting `prod.db`.
+
+**Checked**
+- `npm test`: 34 of 34 on Node 24.13 on the Mac.
+- With the server on UTC, headless Chrome placed entries on the correct day for Sydney, UTC and Los Angeles viewers.
+
+**Not checked**
+- A real Discord sign-in through the new `state` check, real Discord button clicks, and the bot against real Discord.
+- The image on Unraid, and sign-in through Nginx Proxy Manager.
+
+**Next step**
+Jake decides on the merge. Afterwards, sign in with Discord once to confirm the `state` check passes on the live setup.
+
 ## 2026-11-05: Docker image moved to Node 26 (v1.8.2)
 
 **Changed**

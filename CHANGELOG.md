@@ -5,6 +5,27 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.8.3] — 2026-11-05
+
+### Security
+- Requests from other sites can no longer change sessions or RSVPs: login cookies use `SameSite=Lax`, cross-site requests are refused, and signing out now needs a POST.
+- Discord sign-in checks the OAuth `state`, so a sign-in response the browser didn't start is refused.
+- Session covers are only accepted from IGDB's image host. Older sessions with covers from elsewhere show box art instead.
+
+### Fixed
+- A failed Discord button reply, or a Discord connection error, can no longer crash the website.
+- RSVPs now respect the player limit on the web and in Discord. Maybe and can't make it still work when a session is full.
+- Calendar entries appear on the correct day for each viewer, whatever timezone the server uses.
+- Cancelling deletes the session before announcing it, and tidying up Discord posts uses the channel they went to.
+- `prisma` commands now read `.env`, so the README's local setup uses the same database as the app.
+- The app now exits with an error when its port is taken, instead of reporting that it's listening.
+- The message shown after a failed migration no longer tells you to delete your database.
+
+### Added
+- Optional `TZ` setting for calendar days when JavaScript is off.
+
+---
+
 ## [1.8.2] — 2026-11-05
 
 ### Changed

@@ -60,6 +60,7 @@ async function bootApp(directory, extraEnv = {}) {
         child.once('exit', code => { clearTimeout(timeout); reject(new Error(`App exited with ${code}:\n${output}`)); });
     });
     return {
+        url: `http://127.0.0.1:${port}`,
         output: () => output,
         isSignedIn: async cookie => {
             const response = await fetch(`http://127.0.0.1:${port}/`, { headers: cookie ? { cookie } : {} });
@@ -239,5 +240,47 @@ test('an install still on the example secret moves to a generated one', async ()
         assert.equal(await app.isSignedIn(loginCookie('real-login', readFileSync(secretFile(directory), 'utf8').trim())), true);
     } finally {
         await app.stop();
+    }
+});
+
+test('sign-in cookies stay on this site, and a sign-in response this browser did not start is refused', async () => {
+    const directory = installWithUser();
+    const app = await bootApp(directory, { DISCORD_CLIENT_ID: 'test-client', DISCORD_CLIENT_SECRET: 'test-secret' });
+    try {
+        const start = await fetch(app.url + '/auth/discord', { redirect: 'manual' });
+        assert.equal(start.status, 302);
+        assert.match(start.headers.get('location'), /[?&]state=[^&]+/);
+        const cookie = start.headers.get('set-cookie');
+        assert.match(cookie, /SameSite=Lax/i);
+
+        // No state, or the wrong state, ends before the code is ever sent to Discord.
+        for (const query of ['code=stolen', 'code=stolen&state=wrong']) {
+            const refused = await fetch(`${app.url}/auth/discord/callback?${query}`, { redirect: 'manual', headers: { cookie: cookie.split(';')[0] } });
+            assert.equal(refused.status, 302, query);
+            assert.equal(refused.headers.get('location'), '/', query);
+        }
+    } finally {
+        await app.stop();
+    }
+});
+
+test('the app exits with an error when its port is already taken', async () => {
+    const directory = installWithUser();
+    const blocker = createServer();
+    await new Promise(resolve => blocker.listen(0, resolve));
+    try {
+        const child = spawn(process.execPath, [appEntry], {
+            cwd: directory,
+            env: { PATH: process.env.PATH, NODE_ENV: 'production', PORT: String(blocker.address().port), BASE_URL: 'http://localhost', DATABASE_URL: 'file:' + path.join(directory, 'test.db') }
+        });
+        let output = '';
+        child.stdout.on('data', chunk => { output += chunk; });
+        child.stderr.on('data', chunk => { output += chunk; });
+        const code = await new Promise(resolve => child.once('exit', resolve));
+        assert.equal(code, 1);
+        assert.ok(output.includes('Could not start the web server'));
+        assert.ok(!output.includes('Web server listening'));
+    } finally {
+        await new Promise(resolve => blocker.close(resolve));
     }
 });

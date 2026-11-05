@@ -28,6 +28,19 @@
         });
     });
 
+    const localDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    // The server sorts calendar entries into days using its own timezone, so move each one to
+    // its day for this viewer. Otherwise a morning session can sit on the day before.
+    const calendarDay = (date) => document.querySelector('.calendar-day[data-date="' + localDate(date) + '"]');
+    document.querySelectorAll('.calendar-event[data-start]').forEach(entry => {
+        const day = calendarDay(new Date(entry.dataset.start));
+        if (day) day.append(entry);
+        else entry.remove();
+    });
+    document.querySelectorAll('.calendar-day.is-today').forEach(day => day.classList.remove('is-today'));
+    calendarDay(new Date())?.classList.add('is-today');
+    if ($('calendar-zone')) $('calendar-zone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ');
+
     // In automatic mode the schedule is an agenda on phones.
     if (document.querySelector('.view-auto')) {
         const media = matchMedia('(max-width: 640px)');
@@ -71,7 +84,6 @@
     const status = $('game-search-status');
     let debounce, controller, generation = 0, active = -1;
     let options = [];
-    const localDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
     $('date').min = localDate(new Date());
     $('timezone-hint').textContent = 'Your timezone: ' + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ') + '. Everyone sees the same start time.';
     // Same colour choice as artIndex in src/session-utils.ts.
