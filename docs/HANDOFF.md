@@ -7,8 +7,12 @@
 - `public/small-logo.png` and `public/icon.svg` had neither and are unchanged, so the Discord thumbnail and favicon stay the same.
 - The running app uses neither changed file, so this merged with `[skip ci]` and no new image or version.
 
-**Not done**
-- Tags and GitHub releases for 1.8.0 to 1.8.4, and deleting merged branches. Automated permission checks blocked both, so they wait on Jake.
+**Also done, with Jake's approval**
+- Created tags and GitHub releases for 1.8.0 to 1.8.4, with 1.8.4 marked as latest.
+- Deleted the merged branches from GitHub. The notes in `~/agent-config` now say FreeToPlay runs on Node 26.
+
+**Next step**
+Pull `latest` on Unraid and run the checks in the v1.8.3 and login entries below. None of today's work has run there yet.
 
 ## 2026-11-05: Forged-request check on plain http (v1.8.4, branch `claude/origin-check`)
 
