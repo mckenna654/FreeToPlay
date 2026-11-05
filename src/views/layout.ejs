@@ -25,7 +25,7 @@
             <% } %>
         </div>
         <div class="account">
-            <% if (user) { %><span class="avatar"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= user.username.slice(0, 1).toUpperCase() %><% } %></span><div><strong><%= user.username %></strong><a href="/logout">Sign out</a></div>
+            <% if (user) { %><span class="avatar"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= user.username.slice(0, 1).toUpperCase() %><% } %></span><div><strong><%= user.username %></strong><form action="/logout" method="POST"><button type="submit">Sign out</button></form></div>
             <% } else { %><a href="/auth/discord" class="button button-secondary">Connect Discord</a><small>Sign in to host or join a session</small><% } %>
         </div>
     </aside>

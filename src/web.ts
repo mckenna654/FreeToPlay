@@ -7,8 +7,9 @@ import expressLayouts from 'express-ejs-layouts';
 import prisma, { dbPath } from './prisma';
 import { resolveSessionSecret, SqliteSessionStore } from './session-store';
 import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addDays, addMonths, subDays, subMonths } from 'date-fns';
 import dns from 'dns';
+import { saveRsvp } from './rsvp';
 import { artIndex, coverUrl, sessionCalendar, validateSession } from './session-utils';
 
 // Force IPv4 DNS resolution for fetch/axios to fix ENOTFOUND errors
@@ -23,6 +24,16 @@ app.set('layout', 'layout');
 app.set('view engine', 'ejs');
 const projectRoot = path.resolve(__dirname, path.basename(path.dirname(__dirname)) === 'dist' ? '../..' : '..');
 app.set('views', path.join(projectRoot, 'src/views'));
+
+// Browsers label where a request came from. Refuse changes sent from other sites, so a page
+// elsewhere can't act as someone who is signed in here.
+app.use((req, res, next) => {
+    const site = req.get('sec-fetch-site');
+    if (!['GET', 'HEAD'].includes(req.method) && site && !['same-origin', 'none'].includes(site)) {
+        return res.status(403).send('Requests from other sites are not allowed');
+    }
+    next();
+});
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -40,6 +51,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production' && process.env.BASE_URL?.startsWith('https'), // true if behind HTTPS proxy
+        sameSite: 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
     }
 }));
@@ -63,7 +75,8 @@ if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
         clientID: process.env.DISCORD_CLIENT_ID,
         clientSecret: process.env.DISCORD_CLIENT_SECRET,
         callbackURL: `${process.env.BASE_URL}/auth/discord/callback`,
-        scope: ['identify']
+        scope: ['identify'],
+        state: true // Reject sign-in responses this browser didn't start
     } as any, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
         try {
             const user = await prisma.user.upsert({
@@ -96,7 +109,8 @@ app.use((req, res, next) => {
     res.locals.artIndex = artIndex;
     res.locals.format = format;
     res.locals.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    res.locals.error = typeof req.query.error === 'string' ? 'Something went wrong. Please try again.' : null;
+    res.locals.error = req.query.error === 'full' ? 'This session is full. You can still choose maybe.'
+        : typeof req.query.error === 'string' ? 'Something went wrong. Please try again.' : null;
     next();
 });
 
@@ -198,12 +212,13 @@ app.get('/', async (req, res) => {
     const prevMonth = format(subMonths(monthStart, 1), 'yyyy-MM');
     const nextMonth = format(addMonths(monthStart, 1), 'yyyy-MM');
 
-    // Fetch all sessions in the interval
+    // Fetch all sessions in the interval, plus a day each side. In a viewer's timezone, a session
+    // just outside the grid here can land inside it, and the browser moves it to the right day.
     const sessions = await prisma.gameSession.findMany({
         where: {
             startTime: {
-                gte: startDate,
-                lte: endDate
+                gte: subDays(startDate, 1),
+                lte: addDays(endDate, 1)
             }
         },
         orderBy: { startTime: 'asc' },
@@ -265,7 +280,7 @@ app.get('/auth/discord/callback', passport.authenticate('discord', {
     successRedirect: '/'
 }));
 
-app.get('/logout', (req, res, next) => {
+app.post('/logout', (req, res, next) => {
     req.logout((err) => {
         if (err) return next(err);
         res.redirect('/');
@@ -359,21 +374,13 @@ app.post('/sessions/:id/rsvp', async (req, res) => {
 
     const user = req.user as any;
     const sessionId = req.params.id;
-    const { status } = req.body;
+    const status = req.body?.status;
 
     try {
         if (['CONFIRMED', 'TENTATIVE', 'DECLINED'].includes(status)) {
-            await prisma.rSVP.upsert({
-                where: {
-                    sessionId_userId: { sessionId, userId: user.id }
-                },
-                update: { status },
-                create: {
-                    sessionId,
-                    userId: user.id,
-                    status
-                }
-            });
+            const result = await saveRsvp(sessionId, user.id, status);
+            if (result === 'full') return res.redirect(`/sessions/${sessionId}?error=full`);
+            if (result === 'missing') return res.status(404).send('Session not found');
 
             // Update Discord message embed to reflect new slot count
             await updateSessionDiscordMessage(sessionId);
@@ -404,17 +411,20 @@ app.post('/sessions/:id/delete', async (req, res) => {
             return res.status(403).send('Unauthorized');
         }
 
-        if (process.env.DISCORD_CHANNEL_ID) {
+        // Delete first, so a failure here can't announce a cancellation that didn't happen
+        await prisma.gameSession.delete({
+            where: { id: sessionId }
+        });
+
+        // Use the channel the post went to, in case the configured channel has changed since
+        const channelId = session.discordChannelId || process.env.DISCORD_CHANNEL_ID;
+        if (channelId) {
             await notifySessionCancelled({
                 title: session.title,
                 gameTitle: session.gameTitle,
                 creatorName: session.creator.username
-            }, process.env.DISCORD_CHANNEL_ID, session.discordMessageId);
+            }, channelId, session.discordMessageId);
         }
-
-        await prisma.gameSession.delete({
-            where: { id: sessionId }
-        });
 
         res.redirect('/');
     } catch (error) {

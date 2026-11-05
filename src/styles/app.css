@@ -73,6 +73,8 @@ h3 { font-size: 15px; line-height: 20px; font-weight: 500; }
 .account strong { display: block; max-width: 160px; overflow-wrap: anywhere; font-size: 13px; font-weight: 500; }
 .account a:not(.button) { color: var(--secondary); font-size: 12px; }
 .account a:not(.button):hover { color: var(--ink); }
+.account form button { display: block; padding: 0; color: var(--secondary); font-size: 12px; line-height: 16px; transition: color .15s var(--ease); }
+.account form button:hover { color: var(--ink); }
 .account .button { width: 100%; }
 
 /* Buttons and links */
@@ -300,6 +302,9 @@ main > .notice { margin: 16px 32px 0; }
 .rsvp-choice { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--secondary); transition: border-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease); }
 .rsvp-choice:hover { border-color: var(--muted); color: var(--ink); }
 .rsvp-choice:active { transform: scale(.98); }
+.rsvp-choice:disabled { cursor: not-allowed; opacity: .5; }
+.rsvp-choice:disabled:hover { border-color: var(--line); color: var(--secondary); }
+.rsvp-choice:disabled:active { transform: none; }
 .rsvp-choice.is-selected { background: var(--raised); color: var(--ink); font-weight: 500; }
 .rsvp-choice.is-selected .icon { color: var(--accent); }
 .host-actions { border-top: 1px solid var(--line); }

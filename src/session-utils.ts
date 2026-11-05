@@ -1,9 +1,9 @@
-/** Only remote web images are accepted; never executable or local URLs. */
+/** Covers only come from IGDB's image host, so a form can't make every visitor load an image from elsewhere. */
 export function coverUrl(value: unknown): string | null {
     if (typeof value !== 'string') return null;
     try {
         const url = new URL(value);
-        if (!['https:', 'http:'].includes(url.protocol)) return null;
+        if (url.protocol !== 'https:' || url.hostname !== 'images.igdb.com') return null;
         return url.href.replace('/t_cover_big/', '/t_1080p/');
     } catch { return null; }
 }

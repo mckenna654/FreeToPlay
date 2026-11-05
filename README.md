@@ -111,6 +111,7 @@ The gaming lobby: quiet dark surfaces, one lime accent, and game art on session 
 | `IGDB_CLIENT_ID` | No | Twitch/IGDB Client ID for game search/art |
 | `IGDB_CLIENT_SECRET` | No | Twitch/IGDB Client Secret |
 | `PORT` | No | Defaults to `3000` |
+| `TZ` | No | Your group's timezone, e.g. `Australia/Sydney`. Used for calendar days when JavaScript is off |
 
 ### Logins
 
@@ -170,7 +171,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Calendar days and month boundaries use the server timezone, shown below the schedule. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Ticket dates, calendar entry times, and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
+Each viewer sees calendar entries on the correct day for their own timezone, shown below the schedule. Which month's sessions are listed follows the server timezone, as do calendar days when JavaScript is off. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Ticket dates, calendar entry times, and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
 
 Run `npm test` to build and check the app against an isolated temporary SQLite database. Tests cover page rendering, search/filter state, session validation and creation, RSVP/cancellation permissions, calendar exports, and the login secret and saved logins. They do not load your `.env` or connect to Discord.
 
@@ -196,6 +197,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.8.3** | Fixes from a full code review: crash, security, player limit and calendar day fixes |
 | **1.8.2** | Docker image moved to Node 26 |
 | **1.8.1** | Secure login secret by default, and logins now survive restarts |
 | **1.8.0** | Lobby redesign around the next session, seat markers, box art for games without covers, bundled fonts |
@@ -209,7 +211,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.2`.
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.3`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---
