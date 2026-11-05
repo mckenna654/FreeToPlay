@@ -157,7 +157,7 @@ FreeToPlay uses Twitch's IGDB to power game search and cover art.
 
 ## Local development
 
-Use Node.js 24 or newer (`nvm use` selects Node 24). The Docker image also uses Node 24 to support the current SQLite and Prisma dependencies.
+Use Node.js 24 or newer (`nvm use` selects Node 26). The Docker image uses Node 26 to support the current SQLite and Prisma dependencies.
 
 ```bash
 git clone https://github.com/mckenna654/FreeToPlay.git
@@ -196,6 +196,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.8.2** | Docker image moved to Node 26 |
 | **1.8.1** | Secure login secret by default, and logins now survive restarts |
 | **1.8.0** | Lobby redesign around the next session, seat markers, box art for games without covers, bundled fonts |
 | **1.7.0** | Gaming lobby redesign, new branding, agenda/search/filters, calendar downloads, and timezone-aware scheduling |
@@ -208,7 +209,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.1`.
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.2`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---
