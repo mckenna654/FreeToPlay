@@ -42,7 +42,6 @@
     "@types/passport": "^1.0.17",
     "@types/passport-discord": "^0.1.15",
     "autoprefixer": "^10.5.4",
-    "nodemon": "^3.1.14",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.1",
