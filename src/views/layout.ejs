@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0c0d13">
+    <meta name="theme-color" content="#0f0f10">
     <title><%= currentPath === '/sessions/new' ? 'Host a session' : typeof session !== 'undefined' ? session.title : 'The lobby' %> · FreeToPlay</title>
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link href="/styles.css" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <script src="/app.js" defer></script>
@@ -12,29 +13,26 @@
 <body>
     <a href="#main" class="skip-link">Skip to content</a>
     <aside class="sidebar">
-        <a href="/" class="brand" aria-label="FreeToPlay home"><span class="brand-mark" aria-hidden="true"><%- include('partials/controller') %></span><span>FREE<span class="brand-to">TO</span>PLAY<small>YOUR NEXT SESSION STARTS HERE</small></span></a>
+        <a href="/" class="brand" aria-label="FreeToPlay home"><span class="brand-mark" aria-hidden="true"><%- include('partials/controller') %></span><span class="brand-word">FREE<span>TO</span>PLAY</span></a>
         <div class="sidebar-middle">
-            <p class="eyebrow">PLAYER MENU</p>
             <nav aria-label="Main navigation">
-                <a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><span aria-hidden="true">▦</span> The lobby <span class="nav-arrow" aria-hidden="true">↗</span></a>
-                <% if (user) { %><a href="/?filter=mine&view=agenda" class="nav-link"><span aria-hidden="true">◎</span> My sessions</a><% } %>
-                <a href="/sessions/new" class="nav-link <%= currentPath === '/sessions/new' ? 'active' : '' %>"><span aria-hidden="true">＋</span> Host a session</a>
+                <a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><%- include('partials/icon', { name: 'layout-grid' }) %> The lobby</a>
+                <% if (user) { %><a href="/?filter=mine&view=agenda" class="nav-link"><%- include('partials/icon', { name: 'ticket' }) %> My sessions</a><% } %>
+                <a href="/sessions/new" class="nav-link <%= currentPath === '/sessions/new' ? 'active' : '' %>"><%- include('partials/icon', { name: 'plus' }) %> Host a session</a>
             </nav>
-            <div class="club-note"><span class="eyebrow">BETTER IN CO-OP</span><span class="club-controller" aria-hidden="true"><%- include('partials/controller') %></span><p>NO SOLO<br><span>QUEUE.</span></p><small>Your people. Your games.<br>One more round.</small></div>
             <% if (typeof activeMembers !== 'undefined' && activeMembers.length) { %>
-                <section class="members"><p class="eyebrow">THE SQUAD</p><div class="avatar-stack"><% activeMembers.forEach(m => { %><span class="avatar" title="<%= m.username %>"><% if (m.avatar) { %><img src="<%= m.avatar %>" alt="<%= m.username %>"><% } else { %><%= m.username.slice(0, 1).toUpperCase() %><% } %></span><% }) %></div><small>Players in your crew</small></section>
+                <section class="members"><p class="sidebar-label">The crew</p><div class="avatar-stack"><% activeMembers.forEach(m => { %><%- include('partials/avatar', { person: m }) %><% }) %></div></section>
             <% } %>
         </div>
         <div class="account">
             <% if (user) { %><span class="avatar"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= user.username.slice(0, 1).toUpperCase() %><% } %></span><div><strong><%= user.username %></strong><a href="/logout">Sign out</a></div>
-            <% } else { %><a href="/auth/discord" class="button button-discord">Connect Discord <span aria-hidden="true">↗</span></a><small>Sign in to host or join a session.</small><% } %>
+            <% } else { %><a href="/auth/discord" class="button button-secondary">Connect Discord</a><small>Sign in to host or join a session</small><% } %>
         </div>
     </aside>
     <main id="main" tabindex="-1">
-        <div class="topbar"><span><span class="topbar-slash">//</span> MULTIPLAYER STARTS HERE</span><span class="topbar-right"><span class="signal-dot"></span> SQUAD HQ</span></div>
         <% if (error) { %><div class="notice error" role="alert"><%= error %></div><% } %>
         <%- body %>
-        <footer class="site-footer"><span>FreeToPlay <span aria-hidden="true">/</span> Good games. Zero scheduling chaos.</span><span>Game discovery by IGDB</span></footer>
+        <footer class="site-footer"><span>FreeToPlay</span><span>Game discovery by IGDB</span></footer>
     </main>
     <div id="toast" class="toast" role="status" hidden></div>
 </body>

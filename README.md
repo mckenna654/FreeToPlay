@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Squad up. Game on. Your gaming lobby + Discord bot.</strong>
+  <strong>Pick a game, set a time, see who’s in. Your gaming lobby + Discord bot.</strong>
 </p>
 
 <p align="center">
@@ -28,7 +28,7 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 ## Features
 
 ### Web dashboard
-- **Gaming lobby UI** — midnight backgrounds, violet and lime accents, bold game-menu typography, and original sci-fi artwork
+- **Gaming lobby UI** — your next session up front as a ticket, seat markers showing who’s in, and game art on quiet dark surfaces with one lime accent
 - **Calendar and agenda** — monthly planning on desktop; readable agenda by default on phones
 - **Find your next session** — search titles, games, or hosts; filter by open spots or your RSVPs
 - **Upcoming session tickets** — game artwork, dates, and remaining spots at a glance
@@ -63,7 +63,7 @@ Ideal for Unraid, Docker, Portainer, or any home server — with optional HTTPS 
 
 ## Screenshots
 
-The v1.7.0 gaming lobby: dark surfaces, violet/lime accents, bold type, and original sci-fi artwork. Screenshots use sample sessions and players; controller tiles show the fallback when a session has no IGDB artwork.
+The gaming lobby: quiet dark surfaces, one lime accent, and game art on session tickets. Screenshots use sample sessions and players; the coloured boxes with large game names show the fallback when a session has no IGDB artwork.
 
 ### Desktop lobby
 
@@ -163,7 +163,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Calendar month boundaries use the server timezone, shown below the schedule. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Upcoming ticket dates and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
+Calendar days and month boundaries use the server timezone, shown below the schedule. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Ticket dates, calendar entry times, and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
 
 Run `npm test` to build and check the app against an isolated temporary SQLite database. Tests cover page rendering, search/filter state, session validation and creation, RSVP/cancellation permissions, and calendar exports. They do not load your `.env` or connect to Discord.
 
@@ -178,6 +178,7 @@ For a local preview with sample sessions, run `node tests/support.cjs` after bui
 - **discord.js**
 - **Passport Discord OAuth**
 - **Tailwind CSS**
+- **Bricolage Grotesque** and **IBM Plex Mono** (bundled, SIL Open Font License) · **Lucide** icons (ISC License)
 - **Docker** (multi-stage Debian Bookworm image)
 
 ---
