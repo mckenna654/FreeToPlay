@@ -1,5 +1,23 @@
 # Handoff
 
+## 2026-11-05: Forged-request check on plain http (v1.8.4, branch `claude/origin-check`)
+
+**Changed**
+- `isOwnSiteRequest` in `src/session-utils.ts` now decides. It uses `Sec-Fetch-Site` when present, otherwise compares
+  `Origin`, including its scheme, with the request's own address and `BASE_URL`. Requests with neither header are allowed, because browsers always
+  send `Origin` on a POST.
+
+**Checked**
+- `npm test`: 36 of 36 on Node 24.13 on the Mac.
+- Chrome over plain `http` on the Mac's LAN address: no `Sec-Fetch-Site` was sent, a page on another port was refused
+  and changed nothing, and a form on the app's own origin still worked.
+
+**Not checked**
+- The image on Unraid, sign-in through Nginx Proxy Manager, and a real Discord sign-in.
+
+**Next step**
+Jake decides on the merge. The 1.8.3 checks for Discord sign-in on the live setup still apply.
+
 ## 2026-11-05: Fixes from the full code review (v1.8.3, branch `claude/review-fixes`)
 
 **Changed**

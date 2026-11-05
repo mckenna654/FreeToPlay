@@ -8,6 +8,24 @@ export function coverUrl(value: unknown): string | null {
     } catch { return null; }
 }
 
+// Whether a browser request to change something came from this app's own pages. Browsers don't
+// send Sec-Fetch-Site over plain http, such as on a LAN address, so Origin covers that case. There,
+// SameSite cookies treat other ports on the same address as the same site, so they can't help.
+// Browsers always send Origin with a POST, so a request with neither header isn't from a browser
+// page and can't be a forged request. The request's own address and BASE_URL are both accepted
+// because a reverse proxy may rewrite Host. Scheme counts too: http and https are different sites.
+export function isOwnSiteRequest(headers: { site?: string; origin?: string; host?: string; protocol: string }, baseUrl?: string): boolean {
+    if (headers.site) return ['same-origin', 'none'].includes(headers.site);
+    if (!headers.origin) return true;
+    try {
+        const origin = new URL(headers.origin);
+        if (origin.origin === new URL(`${headers.protocol}://${headers.host}`).origin) return true;
+        return !!baseUrl && origin.origin === new URL(baseUrl).origin;
+    } catch {
+        return false; // Includes "Origin: null", which sandboxed pages send
+    }
+}
+
 // Picks a stable colour for a game without cover art. public/app.js repeats this for the live form preview.
 export function artIndex(title: unknown): number {
     let hash = 7;

@@ -5,6 +5,13 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.8.4] — 2026-11-05
+
+### Security
+- Closed a gap in the 1.8.3 forged-request protection on plain `http` installs, such as a LAN address. Browsers don't send `Sec-Fetch-Site` there, so a page on another port of the same address could still act as a signed-in user. Requests are now also checked against their `Origin`.
+
+---
+
 ## [1.8.3] — 2026-11-05
 
 ### Security

@@ -10,7 +10,7 @@ import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage }
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addDays, addMonths, subDays, subMonths } from 'date-fns';
 import dns from 'dns';
 import { saveRsvp } from './rsvp';
-import { artIndex, coverUrl, sessionCalendar, validateSession } from './session-utils';
+import { artIndex, coverUrl, isOwnSiteRequest, sessionCalendar, validateSession } from './session-utils';
 
 // Force IPv4 DNS resolution for fetch/axios to fix ENOTFOUND errors
 dns.setDefaultResultOrder('ipv4first');
@@ -25,11 +25,10 @@ app.set('view engine', 'ejs');
 const projectRoot = path.resolve(__dirname, path.basename(path.dirname(__dirname)) === 'dist' ? '../..' : '..');
 app.set('views', path.join(projectRoot, 'src/views'));
 
-// Browsers label where a request came from. Refuse changes sent from other sites, so a page
-// elsewhere can't act as someone who is signed in here.
+// Refuse changes sent from other sites, so a page elsewhere can't act as someone signed in here.
 app.use((req, res, next) => {
-    const site = req.get('sec-fetch-site');
-    if (!['GET', 'HEAD'].includes(req.method) && site && !['same-origin', 'none'].includes(site)) {
+    const ownSite = isOwnSiteRequest({ site: req.get('sec-fetch-site'), origin: req.get('origin'), host: req.get('host'), protocol: req.protocol }, process.env.BASE_URL);
+    if (!['GET', 'HEAD'].includes(req.method) && !ownSite) {
         return res.status(403).send('Requests from other sites are not allowed');
     }
     next();
