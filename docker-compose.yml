@@ -8,6 +8,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
+      # Holds the database, saved logins (sessions.db) and the generated login secret (session-secret)
       - ./data:/app/data
     env_file:
       - .env

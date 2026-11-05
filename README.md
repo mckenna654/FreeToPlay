@@ -106,11 +106,18 @@ The v1.7.0 gaming lobby: dark surfaces, violet/lime accents, bold type, and orig
 | `DISCORD_BOT_TOKEN` | Yes | Bot token |
 | `DISCORD_CHANNEL_ID` | Yes | Channel ID for session posts |
 | `BASE_URL` | Yes | Public URL, e.g. `https://f2p.example.com` or `http://192.168.1.50:3000` |
-| `SESSION_SECRET` | Yes | Random string for login cookies |
 | `DATABASE_URL` | Yes | Must be `file:/app/data/prod.db` |
+| `SESSION_SECRET` | No | Signs login cookies. Leave it empty and the app creates a random one for you (see below) |
 | `IGDB_CLIENT_ID` | No | Twitch/IGDB Client ID for game search/art |
 | `IGDB_CLIENT_SECRET` | No | Twitch/IGDB Client Secret |
 | `PORT` | No | Defaults to `3000` |
+
+### Logins
+
+People stay signed in for a week, including across restarts and image updates, as long as the `/app/data` path is mapped. The app keeps two files next to the database:
+
+- `session-secret`: a random secret, created on first start when `SESSION_SECRET` is empty. Keep it private and include it in backups. Example values such as `super-secret` are ignored, because they are public.
+- `sessions.db`: the saved logins. Deleting either file while the container is stopped is safe: it only signs everyone out.
 
 ---
 
@@ -165,7 +172,7 @@ Open `http://localhost:3000`.
 
 Calendar month boundaries use the server timezone, shown below the schedule. Set the server/container `TZ` environment variable to your group's timezone (for example, `Australia/Sydney`) if needed. Upcoming ticket dates and session details are displayed in the viewer's local timezone when JavaScript is enabled. Without JavaScript, the form uses the labeled server timezone.
 
-Run `npm test` to build and check the app against an isolated temporary SQLite database. Tests cover page rendering, search/filter state, session validation and creation, RSVP/cancellation permissions, and calendar exports. They do not load your `.env` or connect to Discord.
+Run `npm test` to build and check the app against an isolated temporary SQLite database. Tests cover page rendering, search/filter state, session validation and creation, RSVP/cancellation permissions, calendar exports, and the login secret and saved logins. They do not load your `.env` or connect to Discord.
 
 For a local preview with sample sessions, run `node tests/support.cjs` after building and open the printed localhost URL. This fixture uses a separate temporary database; Discord login is intentionally disabled.
 
@@ -188,6 +195,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.7.1** | Secure login secret by default, and logins now survive restarts |
 | **1.7.0** | Gaming lobby redesign, new branding, agenda/search/filters, calendar downloads, and timezone-aware scheduling |
 | **1.6.0** | Migrated game search and artwork integration to IGDB |
 | **1.5.1** | Docker build fix + migration recovery guidance |
@@ -198,7 +206,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.7.0`.
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.7.1`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---

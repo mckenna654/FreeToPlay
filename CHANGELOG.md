@@ -5,6 +5,19 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.7.1] — 2026-11-05
+
+### Security
+- `SESSION_SECRET` no longer falls back to a hard-coded value. When it is empty or a publicly known example value, the app generates a random secret and saves it as `session-secret` next to the database.
+
+### Fixed
+- Logins are saved in `sessions.db` next to the database instead of in memory, so restarts no longer sign everyone out and the memory leak warning is gone.
+
+### Changed
+- `SESSION_SECRET` is now optional. Existing values other than the public examples keep working.
+
+---
+
 ## [1.7.0] — 2026-10-14
 
 ### Added
