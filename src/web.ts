@@ -4,7 +4,8 @@ import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
-import prisma from './prisma';
+import prisma, { dbPath } from './prisma';
+import { resolveSessionSecret, SqliteSessionStore } from './session-store';
 import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import dns from 'dns';
@@ -30,9 +31,11 @@ app.use(express.static(path.join(projectRoot, 'public')));
 
 app.set('trust proxy', 1);
 
-// Sessions
+// Sessions: the secret and saved logins live beside the database, on the persistent volume
+const dataDirectory = path.dirname(path.resolve(dbPath));
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'super-secret',
+    secret: resolveSessionSecret(dataDirectory),
+    store: new SqliteSessionStore(path.join(dataDirectory, 'sessions.db')),
     resave: false,
     saveUninitialized: false,
     cookie: {

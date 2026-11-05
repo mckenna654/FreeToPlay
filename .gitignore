@@ -13,3 +13,8 @@ data
 # Claude Code (personal/local files)
 .claude/settings.local.json
 .claude/.deps-installed.sha256
+
+# Generated beside a local dev.db: login secret and saved logins
+session-secret
+sessions.db
+sessions.db-journal
