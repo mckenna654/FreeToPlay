@@ -9,13 +9,13 @@ Ships as `ghcr.io/mckenna654/freetoplay` for Unraid/Docker. Global rules: `mcken
 - `docs/releases/` release notes · `CHANGELOG.md`
 - `.agents/skills`, `.claude/skills`, `.windsurf/skills` hold Prisma reference skills. Leave them alone.
 
-## Commands (Node 24, see `.nvmrc`)
+## Commands (Node 26, see `.nvmrc`)
 - `npm ci` · `npm run dev` (Tailwind build plus tsx watch) · `npm run build` (tsc plus CSS)
 - `npm run dev` and `npm run build` run `prisma generate` first. Without the generated client,
   `tsc` fails with a misleading TS5011 `rootDir` error. Don't use `postinstall` for this: the
   Dockerfile runs `npm ci` before the schema is copied in.
 - `npm test` builds first, then runs `node --test tests/*.test.cjs`. Run it before committing.
-- Claude cloud sessions have Node 22, not 24. If something needs Node 24, say so; CI and Docker use 24.
+- Claude cloud sessions have Node 22, not 26. The app needs Node 24 or newer, so say so if that blocks you; CI and Docker use 26.
 
 ## Rules
 - Config comes from env vars documented in `.env.example`. A new variable goes into `.env.example`,

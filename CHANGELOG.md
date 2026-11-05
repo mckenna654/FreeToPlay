@@ -5,6 +5,13 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
+## [1.8.2] — 2026-11-05
+
+### Changed
+- The Docker image and `.nvmrc` now use Node 26. Node 24 still works for local development.
+
+---
+
 ## [1.8.1] — 2026-11-05
 
 ### Security

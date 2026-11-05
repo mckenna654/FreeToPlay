@@ -1,5 +1,22 @@
 # Handoff
 
+## 2026-11-05: Docker image moved to Node 26 (v1.8.2)
+
+**Changed**
+- Merged Dependabot's PR 3 at Jake's request, which moves both Dockerfile stages to `node:26-bookworm-slim`.
+- `.nvmrc`, `AGENTS.md` and the README now say Node 26. `engines` stays at `>=24`.
+- Bumped to 1.8.2, so `v1.8.1` remains a Node 24 image to fall back on.
+
+**Checked**
+- On Node 26.13 on the Mac: `npm ci`, `npm test` (22 of 22), `prisma migrate deploy`, and the built app started and served the home page.
+
+**Not checked**
+- The new image on Unraid, including `better-sqlite3` loading against a database on the appdata share.
+- A real Discord sign-in, and the bot connecting to Discord under Node 26.
+
+**Next step**
+Pull `latest` on Unraid and run the checks in the login entry below. If Node 26 misbehaves, pin `:v1.8.1`.
+
 ## 2026-11-05: Login secret and saved logins (v1.8.1)
 
 **Changed (branch `claude/secure-login-sessions`)**
