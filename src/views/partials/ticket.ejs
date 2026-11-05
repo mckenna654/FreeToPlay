@@ -1,0 +1,13 @@
+<% const going = s.rsvps.filter(r => r.status === 'CONFIRMED'); const spots = Math.max(0, s.maxPlayers - going.length); %><a href="/sessions/<%= s.id %>" class="session-ticket <%= locals.featured ? 'is-featured' : '' %>">
+    <%- include('art', { game: s.gameTitle, cover: s.gameCoverUrl }) %>
+    <div class="ticket-body">
+        <div class="ticket-date"><time data-local-month datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'MMM') %></time><strong><time data-local-day datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'd') %></time></strong></div>
+        <div class="ticket-info">
+            <% if (locals.featured) { %><p class="ticket-label">Next up</p><% } %>
+            <h3><%= s.title %></h3>
+            <p><time data-local-time datetime="<%= s.startTime.toISOString() %>"><%= format(s.startTime, 'EEE d MMM, h:mm a') %></time></p>
+            <p class="ticket-seats"><%- include('seats', { taken: going.length, total: s.maxPlayers }) %><span class="availability"><%= spots ? spots + ' spot' + (spots === 1 ? '' : 's') + ' open' : 'Full house' %></span></p>
+        </div>
+        <% if (locals.featured && going.length) { %><div class="avatar-stack ticket-crew"><% going.slice(0, 6).forEach(r => { %><%- include('avatar', { person: r.user }) %><% }) %></div><% } %>
+    </div>
+</a>

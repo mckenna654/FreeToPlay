@@ -8,6 +8,13 @@ export function coverUrl(value: unknown): string | null {
     } catch { return null; }
 }
 
+// Picks a stable colour for a game without cover art. public/app.js repeats this for the live form preview.
+export function artIndex(title: unknown): number {
+    let hash = 7;
+    for (const character of String(title ?? '')) hash = (hash * 31 + (character.codePointAt(0) ?? 0)) >>> 0;
+    return hash % 8;
+}
+
 export function validateSession(input: unknown, now = new Date()) {
     const body = input && typeof input === 'object' ? input as Record<string, unknown> : {};
     const text = (key: string) => typeof body[key] === 'string' ? (body[key] as string).trim() : '';
