@@ -21,7 +21,9 @@
 - `public/logo.svg` and the PNG logos still carry violet details and the old tagline. They were left alone.
 
 **Next step**
-Jake reviews the pull request. Merging to `main` publishes a new image and overwrites `latest` and `v1.7.0`.
+Released as version 1.8.0, so the image publishes as `latest` and `v1.8.0`, and `v1.7.0` keeps the previous look as a
+rollback. No git tag or GitHub release was created. Check a real IGDB cover and Discord sign-in on the live app. PR 12
+still targets 1.7.1, so it needs moving to 1.8.1 before it merges.
 
 ## 2026-11-05: Dependabot and `npm audit` review
 

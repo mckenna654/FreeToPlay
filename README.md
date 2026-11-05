@@ -189,6 +189,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.8.0** | Lobby redesign around the next session, seat markers, box art for games without covers, bundled fonts |
 | **1.7.0** | Gaming lobby redesign, new branding, agenda/search/filters, calendar downloads, and timezone-aware scheduling |
 | **1.6.0** | Migrated game search and artwork integration to IGDB |
 | **1.5.1** | Docker build fix + migration recovery guidance |
@@ -199,7 +200,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.7.0`.
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.0`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---
