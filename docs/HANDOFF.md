@@ -1,5 +1,15 @@
 # Handoff
 
+## 2026-11-05: Logo cleanup
+
+**Changed**
+- Removed the violet corner marks and old tagline from `public/logo.svg`, and regenerated `public/large-logo.png` from it.
+- `public/small-logo.png` and `public/icon.svg` had neither and are unchanged, so the Discord thumbnail and favicon stay the same.
+- The running app uses neither changed file, so this merged with `[skip ci]` and no new image or version.
+
+**Not done**
+- Tags and GitHub releases for 1.8.0 to 1.8.4, and deleting merged branches. Automated permission checks blocked both, so they wait on Jake.
+
 ## 2026-11-05: Forged-request check on plain http (v1.8.4, branch `claude/origin-check`)
 
 **Changed**

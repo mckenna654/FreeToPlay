@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/large-logo.png" alt="FreeToPlay — your next session starts here" width="560">
+  <img src="public/large-logo.png" alt="FreeToPlay" width="560">
 </p>
 
 <p align="center">
