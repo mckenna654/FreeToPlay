@@ -197,6 +197,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 
 | Version | Highlights |
 |---------|------------|
+| **1.8.4** | Forged-request protection now also covers plain `http` installs |
 | **1.8.3** | Fixes from a full code review: crash, security, player limit and calendar day fixes |
 | **1.8.2** | Docker image moved to Node 26 |
 | **1.8.1** | Secure login secret by default, and logins now survive restarts |
@@ -211,7 +212,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full **1.x** release history.
 | **1.1.0** | Game search + cover art |
 | **1.0.0** | Initial web app, Discord bot, Docker |
 
-> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.3`.
+> **Note:** Pull `ghcr.io/mckenna654/freetoplay:latest` or pin `:v1.8.4`.
 > Do not pin old tags like `v1.0.0`–`v1.4.0` for production — those point at early snapshots.
 
 ---

@@ -1,7 +1,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { startFixture } = require('./support.cjs');
-const { validateSession, sessionCalendar, coverUrl, artIndex } = require('../dist/src/session-utils');
+const { validateSession, sessionCalendar, coverUrl, artIndex, isOwnSiteRequest } = require('../dist/src/session-utils');
 let fixture;
 before(async () => { fixture = await startFixture(); });
 after(async () => { if (fixture) await fixture.close(); });
@@ -245,4 +245,36 @@ test('covers are only accepted from the IGDB image host', () => {
     }
     const { values } = validateSession({ imageUrl: 'https://evil.example/a.png' });
     assert.equal(values.imageUrl, '');
+});
+test('over plain http, where browsers send no Sec-Fetch-Site, Origin decides', async () => {
+    await seatedSession('over-http', 4, ['alex']);
+    const port = new URL(fixture.baseUrl).port;
+    const send = origin => fetch(fixture.baseUrl + '/sessions/over-http/rsvp', {
+        method: 'POST', redirect: 'manual',
+        headers: { 'x-test-user': 'sam', origin, 'content-type': 'application/x-www-form-urlencoded' },
+        body: 'status=CONFIRMED'
+    });
+    for (const origin of [`http://127.0.0.1:${Number(port) + 1}`, 'http://evil.example', 'https://127.0.0.1.evil.example', 'null']) {
+        assert.equal((await send(origin)).status, 403, origin);
+        assert.equal(await rsvpOf('over-http', 'sam'), null, origin);
+    }
+    assert.equal((await send(`http://127.0.0.1:${port}`)).status, 302);
+    assert.equal((await rsvpOf('over-http', 'sam')).status, 'CONFIRMED');
+});
+test('the own-site check handles proxies and its fallbacks', () => {
+    const base = 'https://f2p.example.com/';
+    // A proxy that rewrites Host is still recognised through BASE_URL.
+    assert.equal(isOwnSiteRequest({ origin: 'https://f2p.example.com', host: 'freetoplay:3000' }, base), true);
+    // The same name on another scheme or port is a different site.
+    assert.equal(isOwnSiteRequest({ origin: 'http://f2p.example.com', host: 'freetoplay:3000' }, base), false);
+    assert.equal(isOwnSiteRequest({ origin: 'https://f2p.example.com:8443', host: 'freetoplay:3000' }, base), false);
+    // Sec-Fetch-Site wins when the browser sends it, even if Origin would pass.
+    assert.equal(isOwnSiteRequest({ site: 'same-site', origin: 'https://f2p.example.com', host: 'f2p.example.com' }, base), false);
+    assert.equal(isOwnSiteRequest({ site: 'same-origin' }, base), true);
+    // Broken values are refused rather than crashing, including a missing or invalid BASE_URL.
+    assert.equal(isOwnSiteRequest({ origin: 'not a url', host: 'a' }, base), false);
+    assert.equal(isOwnSiteRequest({ origin: 'http://other', host: 'a' }), false);
+    assert.equal(isOwnSiteRequest({ origin: 'http://other', host: 'a' }, 'nonsense'), false);
+    // No browser page sends neither header, so there is nothing to forge.
+    assert.equal(isOwnSiteRequest({ host: 'a' }, base), true);
 });
