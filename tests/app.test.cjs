@@ -1,7 +1,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { startFixture } = require('./support.cjs');
-const { validateSession, sessionCalendar, coverUrl } = require('../dist/src/session-utils');
+const { validateSession, sessionCalendar, coverUrl, artIndex } = require('../dist/src/session-utils');
 let fixture;
 before(async () => { fixture = await startFixture(); });
 after(async () => { if (fixture) await fixture.close(); });
@@ -15,9 +15,9 @@ const post = (url, data, user = 'alex') => fetch(fixture.baseUrl + url, {
 test('noticeboard, guest, agenda, event, and host form render', async () => {
     for (const [url, user, expected] of [
         ['/', null, 'Connect Discord'], ['/?view=agenda', 'alex', 'My sessions'],
-        ['/sessions/bug-hunt', 'alex', 'You’re on the list.'],
+        ['/sessions/bug-hunt', 'alex', 'You’re on the list'],
         ['/sessions/new?date=2030-10-15', 'alex', '2030-10-15'],
-        ['/?month=2030-01', null, 'No missions on the calendar.']
+        ['/?month=2030-01', null, 'Nothing on the calendar']
     ]) {
         const response = await get(url, user);
         assert.equal(response.status, 200, url);
@@ -94,4 +94,19 @@ test('unsafe images and malformed form data are rejected', () => {
     assert.equal(coverUrl('https://images.igdb.com/t_cover_big/test.jpg'), 'https://images.igdb.com/t_1080p/test.jpg');
     assert.ok(validateSession({ title: [], maxPlayers: '1.5', startTimeIso: 'oops' }).errors.length >= 3);
     assert.ok(validateSession(undefined).errors.length >= 3);
+});
+test('games without cover art keep the same colour', () => {
+    assert.equal(artIndex('Helldivers 2'), artIndex('Helldivers 2'));
+    for (const title of ['Helldivers 2', 'Stardew Valley', '🎮', '', null]) {
+        assert.ok(Number.isInteger(artIndex(title)) && artIndex(title) >= 0 && artIndex(title) < 8);
+    }
+});
+test('the next session leads the lobby and the queue does not repeat it', async () => {
+    const html = await (await get('/')).text();
+    const hero = html.split('<header class="lobby-hero">')[1].split('</header>')[0];
+    assert.ok(hero.includes('Friday night bug hunt'));
+    assert.ok(hero.includes('2 of 4 seats taken'));
+    const queue = html.split('<section class="up-next"')[1].split('</section>')[0];
+    assert.ok(!queue.includes('Friday night bug hunt'));
+    assert.ok(queue.includes('One more round'));
 });

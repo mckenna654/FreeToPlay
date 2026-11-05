@@ -9,7 +9,7 @@ import { resolveSessionSecret, SqliteSessionStore } from './session-store';
 import { notifyNewSession, notifySessionCancelled, updateSessionDiscordMessage } from './bot';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import dns from 'dns';
-import { coverUrl, sessionCalendar, validateSession } from './session-utils';
+import { artIndex, coverUrl, sessionCalendar, validateSession } from './session-utils';
 
 // Force IPv4 DNS resolution for fetch/axios to fix ENOTFOUND errors
 dns.setDefaultResultOrder('ipv4first');
@@ -93,6 +93,7 @@ app.use((req, res, next) => {
     res.locals.user = req.user;
     res.locals.currentPath = req.path;
     res.locals.coverUrl = coverUrl;
+    res.locals.artIndex = artIndex;
     res.locals.format = format;
     res.locals.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     res.locals.error = typeof req.query.error === 'string' ? 'Something went wrong. Please try again.' : null;
@@ -217,8 +218,8 @@ app.get('/', async (req, res) => {
     const upcomingSessions = await prisma.gameSession.findMany({
         where: { startTime: { gte: today } },
         orderBy: { startTime: 'asc' },
-        take: 3,
-        include: { creator: true, rsvps: true }
+        take: 4,
+        include: { creator: true, rsvps: { include: { user: true } } }
     });
 
     // Recent Members widget data

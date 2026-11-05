@@ -5,7 +5,7 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ---
 
-## [1.7.1] — 2026-11-05
+## [1.8.1] — 2026-11-05
 
 ### Security
 - `SESSION_SECRET` no longer falls back to a hard-coded value. When it is empty or a publicly known example value, the app generates a random secret and saves it as `session-secret` next to the database.
@@ -15,6 +15,27 @@ The project follows [Semantic Versioning](https://semver.org/) on a **1.x** line
 
 ### Changed
 - `SESSION_SECRET` is now optional. Existing values other than the public examples keep working.
+
+---
+
+## [1.8.0] — 2026-11-05
+
+### Added
+- Seat markers showing filled and open player slots on tickets, the calendar, the agenda, and session pages.
+- Type-set box art in a stable colour for games with no cover image.
+- Bundled Bricolage Grotesque and IBM Plex Mono fonts, and Lucide icons.
+
+### Changed
+- Redesigned every screen around quiet dark surfaces with lime as the only accent.
+- The lobby hero now shows the real next session as a ticket, and the queue lists the sessions after it.
+- Calendar entry times now use the viewer's local time, and time formats match across the app.
+- Replaced slogans with plain wording and Australian spelling.
+
+### Fixed
+- The agenda no longer says "1 spots open".
+
+### Removed
+- The sci-fi hero artwork, the top bar, and the sidebar slogan block.
 
 ---
 

@@ -1,0 +1,1 @@
+<% const seatTotal = Math.max(0, total); const seatTaken = Math.min(Math.max(0, taken), seatTotal); if (seatTotal <= 12) { %><span class="seats" role="img" aria-label="<%= seatTaken %> of <%= seatTotal %> seats taken"><% for (let seat = 0; seat < seatTotal; seat++) { %><span class="seat <%= seat < seatTaken ? 'taken' : '' %>"></span><% } %></span><% } %>

@@ -1,0 +1,1 @@
+<% const artCover = coverUrl(cover); %><div class="game-art <%= artCover ? '' : 'art-fallback' %>" data-art="<%= artIndex(game) %>" data-title="<%= game %>"><% if (artCover) { %><img src="<%= artCover %>" alt="<%= locals.alt || '' %>" loading="lazy"><% } %><span class="art-title"><%= game %></span></div>
