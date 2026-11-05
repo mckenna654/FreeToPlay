@@ -12,7 +12,8 @@
     const timeFormats = [
         ['[data-local-month]', { month: 'short' }],
         ['[data-local-weekday]', { weekday: 'short' }],
-        ['[data-local-day]', { day: '2-digit' }],
+        ['[data-local-day]', { day: 'numeric' }],
+        ['[data-local-hour]', { hour: 'numeric', minute: '2-digit' }],
         ['[data-local-time]', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }],
         ['[data-local-date]', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }],
         ['[data-local-clock]', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }]
@@ -73,14 +74,34 @@
     const localDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
     $('date').min = localDate(new Date());
     $('timezone-hint').textContent = 'Your timezone: ' + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ') + '. Everyone sees the same start time.';
+    // Same colour choice as artIndex in src/session-utils.ts.
+    const artIndex = (title) => {
+        let hash = 7;
+        for (const character of title) hash = (hash * 31 + character.codePointAt(0)) >>> 0;
+        return hash % 8;
+    };
+    const renderSeats = (total) => {
+        const seats = [];
+        for (let seat = 0; seat < total && total <= 12; seat++) {
+            const marker = document.createElement('span');
+            marker.className = seat === 0 ? 'seat taken' : 'seat';
+            seats.push(marker);
+        }
+        $('preview-seats').replaceChildren(...seats);
+    };
     const updatePreview = () => {
-        $('preview-title').textContent = $('title').value.trim() || 'Your next adventure.';
-        $('preview-game').textContent = gameInput.value.trim() || 'Pick your game';
+        const game = gameInput.value.trim();
+        $('preview-title').textContent = $('title').value.trim() || 'Session name';
+        $('preview-game').textContent = game || 'Your game';
+        $('preview-art').dataset.art = String(artIndex(game));
+        $('preview-art').dataset.title = game || 'Your game';
+        $('preview-art').classList.toggle('art-fallback', !imageInput.value);
         $('preview-players').textContent = $('maxPlayers').value || '4';
+        renderSeats(Number($('maxPlayers').value) || 0);
         const date = new Date($('date').value + 'T' + $('time').value);
         const valid = Number.isFinite(date.getTime());
         $('startTimeIso').value = valid ? date.toISOString() : '';
-        $('preview-time').textContent = valid ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date) : 'A time that works for your group.';
+        $('preview-time').textContent = valid ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date) : 'Date and time';
         $('time').setCustomValidity(valid && date <= new Date() ? 'Choose a time in the future.' : '');
         $('preview-image').hidden = !imageInput.value;
         if (imageInput.value && $('preview-image').getAttribute('src') !== imageInput.value) $('preview-image').src = imageInput.value;
@@ -96,7 +117,7 @@
     window.addEventListener('pageshow', () => {
         const submit = form.querySelector('button[type="submit"]');
         submit.disabled = false;
-        submit.textContent = 'Create session ↗';
+        submit.textContent = 'Create session';
     });
     updatePreview();
 

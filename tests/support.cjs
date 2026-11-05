@@ -4,6 +4,16 @@ const { mkdtempSync, readFileSync, readdirSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
 
+function createDatabase(file) {
+    const Database = require('better-sqlite3');
+    const db = new Database(file);
+    const migrations = path.resolve(__dirname, '../prisma/migrations');
+    for (const name of readdirSync(migrations).sort()) {
+        if (name !== 'migration_lock.toml') db.exec(readFileSync(path.join(migrations, name, 'migration.sql'), 'utf8'));
+    }
+    return db;
+}
+
 async function startFixture() {
     const directory = mkdtempSync(path.join(tmpdir(), 'freetoplay-test-'));
     process.env.DATABASE_URL = 'file:' + path.join(directory, 'test.db');
@@ -15,13 +25,7 @@ async function startFixture() {
     process.env.IGDB_CLIENT_SECRET = '';
     process.env.BASE_URL = 'http://localhost:3000';
     process.env.SESSION_SECRET = 'isolated-fixture-only';
-    const Database = require('better-sqlite3');
-    const db = new Database(path.join(directory, 'test.db'));
-    const migrations = path.resolve(__dirname, '../prisma/migrations');
-    for (const name of readdirSync(migrations).sort()) {
-        if (name !== 'migration_lock.toml') db.exec(readFileSync(path.join(migrations, name, 'migration.sql'), 'utf8'));
-    }
-    db.close();
+    createDatabase(path.join(directory, 'test.db')).close();
     const prisma = require('../dist/src/prisma').default;
     const people = [
         { id: 'alex', username: 'Alex' }, { id: 'sam', username: 'Sam' },
@@ -61,5 +65,5 @@ async function startFixture() {
     };
 }
 
-module.exports = { startFixture };
+module.exports = { startFixture, createDatabase };
 if (require.main === module) startFixture().then(fixture => console.log(JSON.stringify({ baseUrl: fixture.baseUrl, month: fixture.month })));

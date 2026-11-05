@@ -11,6 +11,9 @@ Ships as `ghcr.io/mckenna654/freetoplay` for Unraid/Docker. Global rules: `mcken
 
 ## Commands (Node 24, see `.nvmrc`)
 - `npm ci` · `npm run dev` (Tailwind build plus tsx watch) · `npm run build` (tsc plus CSS)
+- `npm run dev` and `npm run build` run `prisma generate` first. Without the generated client,
+  `tsc` fails with a misleading TS5011 `rootDir` error. Don't use `postinstall` for this: the
+  Dockerfile runs `npm ci` before the schema is copied in.
 - `npm test` builds first, then runs `node --test tests/*.test.cjs`. Run it before committing.
 - Claude cloud sessions have Node 22, not 24. If something needs Node 24, say so; CI and Docker use 24.
 
