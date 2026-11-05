@@ -4,7 +4,7 @@
 
 **Changed**
 - `isOwnSiteRequest` in `src/session-utils.ts` now decides. It uses `Sec-Fetch-Site` when present, otherwise compares
-  `Origin` with the `Host` header and `BASE_URL`. Requests with neither header are allowed, because browsers always
+  `Origin`, including its scheme, with the request's own address and `BASE_URL`. Requests with neither header are allowed, because browsers always
   send `Origin` on a POST.
 
 **Checked**

@@ -27,7 +27,7 @@ app.set('views', path.join(projectRoot, 'src/views'));
 
 // Refuse changes sent from other sites, so a page elsewhere can't act as someone signed in here.
 app.use((req, res, next) => {
-    const ownSite = isOwnSiteRequest({ site: req.get('sec-fetch-site'), origin: req.get('origin'), host: req.get('host') }, process.env.BASE_URL);
+    const ownSite = isOwnSiteRequest({ site: req.get('sec-fetch-site'), origin: req.get('origin'), host: req.get('host'), protocol: req.protocol }, process.env.BASE_URL);
     if (!['GET', 'HEAD'].includes(req.method) && !ownSite) {
         return res.status(403).send('Requests from other sites are not allowed');
     }
