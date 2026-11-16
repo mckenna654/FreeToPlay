@@ -22,10 +22,10 @@
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.1",
     "@prisma/client": "^7.10.1",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^13.1.1",
     "date-fns": "^4.4.0",
-    "discord.js": "^14.27.0",
-    "dotenv": "^18.0.9",
+    "discord.js": "^14.28.1",
+    "dotenv": "^18.0.10",
     "ejs": "^7.0.2",
     "express": "^5.3.0",
     "express-ejs-layouts": "^2.5.1",
@@ -35,7 +35,7 @@
     "prisma": "^7.10.1"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/cli": "^4.3.5",
     "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
     "@types/express-ejs-layouts": "^2.5.4",
